@@ -1,0 +1,10 @@
+# Regions: This is the list of all regions on the server, in all worlds.
+# If you want to disable bows in any region, change that flag from false to true.
+# Messages: This contains the messages to send to the player, currently only one message.
+# Formatting, if you want to you can use %REGION% which is replaced with the region name.
+# ChatColor is supported within the denied message. Use the & Symbol and colors of your choice.
+
+Worlds:
+  world:
+Messages:
+  NotAllowed: "&7[&4Anti&7-&4Bow&7] &6&oSorry, but you're not allowed to use the bow in the region: %REGION%"

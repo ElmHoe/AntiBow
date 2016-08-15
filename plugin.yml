@@ -1,0 +1,11 @@
+name: AntiBow
+main: uk.co.ElmHoe.Bukkit.AntiBow
+version: 0.2
+author: ElmHoe
+load: POSTWORLD
+depend: [WorldGuard, WorldEdit]
+commands:
+   antibow:
+      description: This allows a user with permission or op to be able to make a region not have any bow usage.
+      aliases: [ab]
+      usage: /<command> [args]
