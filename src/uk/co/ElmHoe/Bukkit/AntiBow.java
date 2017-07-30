@@ -4,20 +4,21 @@ import com.sk89q.worldguard.bukkit.WGBukkit;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
+import uk.co.ElmHoe.Bukkit.Utilities.StringUtility;
+
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
-import uk.co.ElmHoe.Bukkit.Utilities.StringUtility;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -27,25 +28,25 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class AntiBow extends JavaPlugin implements Listener{
-  File configFile;
-  FileConfiguration config;
-
-
-  private void loadYamls(){
-	  try{
-		  this.config.load(this.configFile);
-	  }catch (Exception e){
-		  e.printStackTrace();
-	  }
-  }
-  private WorldGuardPlugin getWorldGuard() {
-	    Plugin plugin = getServer().getPluginManager().getPlugin("WorldGuard");
+	File configFile;
+	FileConfiguration config;
+	private static ArrayList<ProtectedRegion> regions = new ArrayList<>();
+	private static List<String> regionList;
+	
+	private void loadYamls(){
+		try{
+			this.config.load(this.configFile);
+		}catch (Exception e){
+			e.printStackTrace();
+		}
+	}
+	private WorldGuardPlugin getWorldGuard() {
+		Plugin plugin = getServer().getPluginManager().getPlugin("WorldGuard");
 	 
 	    // WorldGuard may not be loaded
 	    if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
@@ -55,92 +56,99 @@ public class AntiBow extends JavaPlugin implements Listener{
 	    return (WorldGuardPlugin) plugin;
 	}
   
-  public void onEnable(){
-	  getWorldGuard();
-	  Bukkit.getLogger().info("----------- Attempting to enable Anti-Bow -----------");
-	  this.configFile = new File(getDataFolder(), "config.yml");
-	  try{
-		  firstRun();
-		  Bukkit.getLogger().info("First Run was initated without issue.");
-	  }catch (Exception e){
-		  e.printStackTrace();
-	  }
-	  
-	  this.config = new YamlConfiguration();
-	  
-	  try{
-		  loadYamls();
-		  Bukkit.getLogger().info("Attempting to load YAML files.");
-	  }catch(Exception e){}
-	  
-	  try{
-		  Bukkit.getPluginManager().registerEvents(this, this);
-		  Bukkit.getLogger().info("Events were initated without issue. All looks good.");
-	  }catch(Exception e){}
-	  
-	  
-	  Bukkit.getLogger().info("This version of AntiBow is for Java 1.8, MC 1.10.");
-	  Bukkit.getLogger().info("For any lower versions, please go to Github.com/ElmHoe/AntiBow");
-	  Bukkit.getLogger().info("----------- AntiBow Enabled - v0.2 Build MC-1.10 -----------");
-  }
+	public void onEnable(){
+		getWorldGuard();
+		Bukkit.getLogger().info("----------- Attempting to enable Anti-Bow -----------");
+		this.configFile = new File(getDataFolder(), "config.yml");
+		try{
+			firstRun();
+			Bukkit.getLogger().info("First Run was initated without issue.");
+		}catch (Exception e){
+			e.printStackTrace();
+		}
+		
+		this.config = new YamlConfiguration();
+		  
+		try{
+			loadYamls();
+			Bukkit.getLogger().info("Attempting to load YAML files.");
+		}catch(Exception e){}
+		
+		try{
+			Bukkit.getPluginManager().registerEvents(this, this);
+			Bukkit.getLogger().info("Events were initated without issue. All looks good.");
+		}catch(Exception e){}
+		  
+		  
+		Bukkit.getLogger().info("This version of AntiBow was built against 1.12.");
+		Bukkit.getLogger().info("For any lower or BETA Builds, please go to Github.com/ElmHoe/AntiBow");
+		Bukkit.getLogger().info("----------- AntiBow Enabled - v0.3 Build MC-1.12 -----------");
+		
+		buildRegionsList();
+	}
   
-  public void onDisable()
-  {
-    Bukkit.getLogger().info("AntiBow Disabled");
-  }
+	public void onDisable()
+	{
+		Bukkit.getLogger().info("AntiBow Disabled");
+	}
   
-  public void saveRegion(){
-	  try {
-		config.save(configFile);
-	} catch (IOException e) {}
-  }
+	public void saveRegion(){
+		try {
+			config.save(configFile);
+		} catch (IOException e) {}
+	}
   
-  private void firstRun()
-    throws Exception
-  {
-    if (!this.configFile.exists())
-    {
-      this.configFile.getParentFile().mkdirs();
-      copy(getResource("config.yml"), this.configFile);
-    }
-  }
+	private void firstRun()
+			throws Exception
+	{
+		if (!this.configFile.exists())
+		{
+			this.configFile.getParentFile().mkdirs();
+			copy(getResource("config.yml"), this.configFile);
+		}
+	}
 
   
-  private void copy(InputStream in, File file)
-  {
-    try
-    {
-      OutputStream out = new FileOutputStream(file);
-      byte[] buf = new byte[63];
-      int len;
-      while ((len = in.read(buf)) > 0)
-      {
-        out.write(buf, 0, len);
-      }
-      out.close();
-      in.close();
-    }
-    catch (Exception e)
-    {
-      e.printStackTrace();
-    }
-  }
+	private void copy(InputStream in, File file)
+	{
+		try
+		{
+			OutputStream out = new FileOutputStream(file);
+			byte[] buf = new byte[63];
+			int len;
+			while ((len = in.read(buf)) > 0)
+			{
+				out.write(buf, 0, len);
+			}
+			out.close();
+			in.close();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
   
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args){
 		if (cmd.getName().equalsIgnoreCase("antibow")){
 			Player p = (Player)sender;
 			World ofPlayer = p.getWorld();
 			String worldName = ofPlayer.getName();
-			ArrayList<ProtectedRegion> regions = new ArrayList<ProtectedRegion>();
 			
 			if (sender.hasPermission("antibow.add") || (sender.isOp() == true)){
+				
+				
 				if (args.length == 0){
+					
+					
 					sender.sendMessage(StringUtility.format("&7&m-----[&4Anti&7-&4Bow&7&m]-----"));
 					sender.sendMessage(StringUtility.format("&6&o/antibow add <region>"));
 					sender.sendMessage(StringUtility.format("&6&o/antibow add, without anything after the add, will add the current region you are within."));
 					sender.sendMessage(StringUtility.format("&6&o/antibow remove <region>"));
 					sender.sendMessage(StringUtility.format("&6&o/antibow remove, without anything after remove, will remove the current region you are within."));
 					sender.sendMessage(StringUtility.format("&7&m-----[&4Anti&7-&4Bow&7&m]-----"));
+				
+				
 				}else if (args.length == 1){
 					if (args[0].equalsIgnoreCase("add")){
 						for (ProtectedRegion set : WGBukkit.getRegionManager(ofPlayer).getApplicableRegions(p.getLocation())){
@@ -202,16 +210,14 @@ public class AntiBow extends JavaPlugin implements Listener{
 							}
 						}
 					
+					}else{
+						sender.sendMessage(StringUtility.format("Invalid usage, please check usage by using /antibow"));
 					}
 				}else if (args.length == 2){
 					if (args[0].equalsIgnoreCase("remove")){
 						try{
 							ProtectedRegion region = WGBukkit.getPlugin().getRegionManager(ofPlayer).getRegion(args[1]);
-							if (config.contains("Worlds." + worldName + ".Regions." + region.getId())){
-								config.set("Worlds." + worldName + ".Regions." + region.getId(), false);
-							}else{
-								config.set("Worlds." + worldName + ".Regions." + region.getId(), false);
-							}
+							config.set("Worlds." + worldName + ".Regions." + region.getId(), false);
 							sender.sendMessage(StringUtility.format("&6&oRegion " + region.getId() + " is no longer being blocked"));
 						}catch(Exception e){
 							sender.sendMessage(StringUtility.format("&6&oThe region you specified wasn't found."));
@@ -219,11 +225,7 @@ public class AntiBow extends JavaPlugin implements Listener{
 					}else if (args[0].equalsIgnoreCase("add")){
 						try{
 							ProtectedRegion region = WGBukkit.getPlugin().getRegionManager(ofPlayer).getRegion(args[1]);
-							if (config.contains("Worlds." + worldName + ".Regions." + region.getId())){
-								config.set("Worlds." + worldName + ".Regions." + region.getId(), true);
-							}else{
-								config.set("Worlds." + worldName + ".Regions." + region.getId(), true);
-							}
+							config.set("Worlds." + worldName + ".Regions." + region.getId(), true);
 							sender.sendMessage(StringUtility.format("&6&oRegion " + region.getId() + " is now being blocked"));
 						}catch(Exception e){
 							sender.sendMessage(StringUtility.format("&6&oThe region you specified wasn't found."));
@@ -240,25 +242,60 @@ public class AntiBow extends JavaPlugin implements Listener{
 	}
   
   
-  @EventHandler(priority=EventPriority.MONITOR)
-  public void onInteract(PlayerInteractEvent event){
-	  Player p = event.getPlayer();
-	  if ((p.getInventory().getItemInHand().getType().equals(Material.BOW)) && ((event.getAction().equals(Action.RIGHT_CLICK_AIR)) || (event.getAction().equals(Action.RIGHT_CLICK_BLOCK)))) {
-		  ArrayList<ProtectedRegion> regions = new ArrayList<ProtectedRegion>();
-		  for (ProtectedRegion r : WGBukkit.getRegionManager(p.getWorld()).getApplicableRegions(p.getLocation())) {		
-			  if (config.getBoolean("Worlds." + p.getWorld().getName() + ".Regions." + r.getId()) == true){
-				  regions.add(r);
-			  }
-		  }
-		  if (regions.size() == 0){
+
+	@EventHandler(priority=EventPriority.MONITOR)
+	public void onBowFire(EntityShootBowEvent event){
+		/*
+		 * DEBUGGING
+		 * ENSURE TO REMOVE
+		 * 
+		 */
+		
+		for (int i = 0; i < regionList.size(); i++){
+			System.out.println(regionList.get(i));
+		}
+
+		
+		
+		
+		if (event.getEntityType().equals(org.bukkit.entity.EntityType.PLAYER)){
+			UUID PlayerID = event.getEntity().getUniqueId();
+			Player parsePlayer;
+			System.out.println(PlayerID);
+			try{
+				parsePlayer = Bukkit.getServer().getPlayer(PlayerID);
 			  
-		  }else if (regions.size() == 1){
-			  event.setCancelled(true);
-			  p.sendMessage(StringUtility.format(config.getString("Messages.NotAllowed").replaceAll("%REGION%", regions.get(0).getId())));
-		  }else if (regions.size() >= 2){
-			  event.setCancelled(true);
-			  p.sendMessage(StringUtility.format(config.getString("Messages.NotAllowed").replaceAll("%REGION%", regions.get(0).getId())));
-		  }
-	  }
+				
+				if (regions.size() == 0){
+				  
+				}else if (regions.size() == 1){
+					parsePlayer.sendMessage(StringUtility.format(config.getString("Messages.NotAllowed").replaceAll("%REGION%", regions.get(0).getId())));
+					event.setCancelled(true);
+				}else if (regions.size() >= 2){
+					parsePlayer.sendMessage(StringUtility.format(config.getString("Messages.NotAllowed").replaceAll("%REGION%", regions.get(0).getId())));
+					event.setCancelled(true);
+				}
+
+			  
+			}catch(Exception e){
+				System.out.println("There has been an error, I'm automatically sending details to ElmHoe to get this resolved. Thank you.");
+			}
+		}
+	}
+  
+	public boolean isPlayerInBlockedRegion(Player p, String regionName){	    
+		return false;
   }
+	
+	public boolean buildRegionsList(){
+		try{
+			regionList = config.getStringList("Worlds.");
+			for (int i = 0; i < regionList.size(); i++){
+				System.out.println(regionList.get(i));
+			}
+			return true;
+		}catch(Exception e){
+			return false;
+		}
+	}
 }

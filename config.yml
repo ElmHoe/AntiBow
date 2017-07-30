@@ -8,3 +8,4 @@ Worlds:
   world:
 Messages:
   NotAllowed: "&7[&4Anti&7-&4Bow&7] &6&oSorry, but you're not allowed to use the bow in the region: %REGION%"
+AutomaticallySendErrorLogs:
