@@ -15,9 +15,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -82,7 +83,7 @@ public class AntiBow extends JavaPlugin implements Listener{
 		  
 		Bukkit.getLogger().info("This version of AntiBow was built against 1.12.");
 		Bukkit.getLogger().info("For any lower or BETA Builds, please go to Github.com/ElmHoe/AntiBow");
-		Bukkit.getLogger().info("----------- AntiBow Enabled - v0.3 Build MC-1.12 -----------");
+		Bukkit.getLogger().info("----------- AntiBow Enabled - v 1.0 Build MC-1.12 -----------");
 		
 		buildRegionsList();
 	}
@@ -256,7 +257,7 @@ public class AntiBow extends JavaPlugin implements Listener{
 		}
 
 		
-		
+		buildRegionsList();
 		
 		if (event.getEntityType().equals(org.bukkit.entity.EntityType.PLAYER)){
 			UUID PlayerID = event.getEntity().getUniqueId();
@@ -279,23 +280,53 @@ public class AntiBow extends JavaPlugin implements Listener{
 			  
 			}catch(Exception e){
 				System.out.println("There has been an error, I'm automatically sending details to ElmHoe to get this resolved. Thank you.");
+				if (sendLogs(e) == true){}
 			}
 		}
 	}
   
-	public boolean isPlayerInBlockedRegion(Player p, String regionName){	    
+	public boolean isPlayerInBlockedRegion(Player p, ProtectedRegion region){
 		return false;
   }
 	
-	public boolean buildRegionsList(){
-		try{
-			regionList = config.getStringList("Worlds.");
-			for (int i = 0; i < regionList.size(); i++){
-				System.out.println(regionList.get(i));
+	public void buildRegionsList(){
+		/*
+		 * Used for building the region list.
+		 * 
+		 * It'll load all date from the config, and store it in an arraylist
+		 */
+		List<World> worlds = Bukkit.getWorlds();
+		Bukkit.getServer().getLogger().warning(worlds.toString());
+		for (int i = 0; i < worlds.size(); i++){
+			Map<String, ProtectedRegion> Regions = WGBukkit.getRegionManager(worlds.get(i)).getRegions();
+			String worldName = worlds.get(i).getName();
+			try{
+				for (ProtectedRegion key : Regions.values()){
+					Bukkit.getLogger().warning(Regions.get(key).getId().toString());
+					regionList.addAll(config.getStringList("Worlds." + worldName + ".Regions." + key));
+				}
+			}catch(Exception e){
+				Bukkit.getLogger().warning("World: " + worldName + " doesn't currently exsist in config, writing now.");
+				for (int ii = 0; ii < Regions.size(); ii++){
+					config.set("Worlds." + worldName + ".Regions" + Regions.get(i), false);
+					saveConfig();
+					Bukkit.getLogger().warning(Regions.get(i).toString());
+				}
 			}
-			return true;
-		}catch(Exception e){
-			return false;
+			/*
+			 *  DEBUGGING
+			 */
+			System.out.println(config.getStringList("Worlds." + worldName + ".Regions"));
+			
 		}
+	}
+	
+	public boolean sendLogs(Exception e){
+		/*
+		 * Used for sending errors to myself to investigate.
+		 * 
+		 */
+		
+		return true;
 	}
 }
