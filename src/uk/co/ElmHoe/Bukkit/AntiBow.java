@@ -2,8 +2,10 @@ package uk.co.ElmHoe.Bukkit;
 
 import com.sk89q.worldguard.bukkit.WGBukkit;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
+import uk.co.ElmHoe.Bukkit.Utilities.HTTPUtility;
 import uk.co.ElmHoe.Bukkit.Utilities.StringUtility;
 
 import net.md_5.bungee.api.ChatColor;
@@ -14,7 +16,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,8 +41,25 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class AntiBow extends JavaPlugin implements Listener{
 	File configFile;
 	FileConfiguration config;
+	private final static String version = "1.0";
 	private static ArrayList<ProtectedRegion> regions = new ArrayList<>();
-	private static List<String> regionList;
+	private static HashMap<String,Boolean> regionList;
+	private static String blocked_region;
+	private static String region;
+	
+	public static String defaultMSG = 
+			"<p>IP: " + Bukkit.getServer().getIp().toString() + "<br>"
+			+
+			"Server Name: " + Bukkit.getServer().getName().toString() + "<br>"
+			+
+			"Minecraft Version: " + Bukkit.getServer().getVersion().toString() + "<br>"
+			+
+			"Plugin Version: " + "Anti-Bow v" + version + "<br>"
+			+
+			"DUMP: <br></p>";
+	
+	
+	
 	
 	private void loadYamls(){
 		try{
@@ -65,7 +87,7 @@ public class AntiBow extends JavaPlugin implements Listener{
 			firstRun();
 			Bukkit.getLogger().info("First Run was initated without issue.");
 		}catch (Exception e){
-			e.printStackTrace();
+			
 		}
 		
 		this.config = new YamlConfiguration();
@@ -73,30 +95,32 @@ public class AntiBow extends JavaPlugin implements Listener{
 		try{
 			loadYamls();
 			Bukkit.getLogger().info("Attempting to load YAML files.");
-		}catch(Exception e){}
+		}catch(Exception e){sendLogs("Error #1 whilst loading YAML Files" + "<br>" + e.getMessage());}
 		
 		try{
 			Bukkit.getPluginManager().registerEvents(this, this);
 			Bukkit.getLogger().info("Events were initated without issue. All looks good.");
-		}catch(Exception e){}
+		}catch(Exception e){sendLogs("Error #2 on Registering Events." + "<br>" + e.getMessage());}
 		  
 		  
 		Bukkit.getLogger().info("This version of AntiBow was built against 1.12.");
 		Bukkit.getLogger().info("For any lower or BETA Builds, please go to Github.com/ElmHoe/AntiBow");
-		Bukkit.getLogger().info("----------- AntiBow Enabled - v 1.0 Build MC-1.12 -----------");
 		
 		buildRegionsList();
+		Bukkit.getLogger().info("----------- AntiBow Enabled - v " + version + " Build MC-1.12 -----------");
 	}
   
 	public void onDisable()
 	{
+		saveRegion();
 		Bukkit.getLogger().info("AntiBow Disabled");
 	}
   
 	public void saveRegion(){
 		try {
 			config.save(configFile);
-		} catch (IOException e) {}
+			Bukkit.getLogger().info("Configuration has been saved.");
+		} catch (IOException e) {sendLogs("Error #3 on SaveRegion()" + "<br>" + e.getMessage());}
 	}
   
 	private void firstRun()
@@ -143,10 +167,10 @@ public class AntiBow extends JavaPlugin implements Listener{
 					
 					
 					sender.sendMessage(StringUtility.format("&7&m-----[&4Anti&7-&4Bow&7&m]-----"));
-					sender.sendMessage(StringUtility.format("&6&o/antibow add <region>"));
-					sender.sendMessage(StringUtility.format("&6&o/antibow add, without anything after the add, will add the current region you are within."));
-					sender.sendMessage(StringUtility.format("&6&o/antibow remove <region>"));
-					sender.sendMessage(StringUtility.format("&6&o/antibow remove, without anything after remove, will remove the current region you are within."));
+					sender.sendMessage(StringUtility.format("&6'/antibow add <region>' &7&owill add a user-defined region."));
+					sender.sendMessage(StringUtility.format("&6'/antibow add' &7&owill add the current region you are within."));
+					sender.sendMessage(StringUtility.format("&6'/antibow remove <region>' &7&owill remove a user-defined region"));
+					sender.sendMessage(StringUtility.format("&6'/antibow remove' &7&owill remove the current region you are within."));
 					sender.sendMessage(StringUtility.format("&7&m-----[&4Anti&7-&4Bow&7&m]-----"));
 				
 				
@@ -157,16 +181,17 @@ public class AntiBow extends JavaPlugin implements Listener{
 						}
 						if (regions.size() == 0){
 							sender.sendMessage(StringUtility.format("&6&oYou're currently not in any region at all."));
-								
-							}else if (regions.size() == 1){
-								for (ProtectedRegion r : WGBukkit.getRegionManager(ofPlayer).getApplicableRegions(p.getLocation())){
-									if (config.getBoolean("Worlds." + worldName + ".Regions." + r.getId()) ==true){
-										sender.sendMessage("The region: " + r.getId() + " is already blocking bows.");
-									}else{
-										config.set("Worlds." + worldName + ".Regions." + r.getId(), true);
-										sender.sendMessage("The region is now blocking bows.");
-									}
+						}else if (regions.size() == 1){
+							for (ProtectedRegion r : WGBukkit.getRegionManager(ofPlayer).getApplicableRegions(p.getLocation())){
+								if (config.getBoolean("Worlds." + worldName + ".Regions." + r.getId()) ==true){
+									sender.sendMessage("The region: " + r.getId() + " is already blocking bows.");
+								}else{
+									config.set("Worlds." + worldName + ".Regions." + r.getId(), true);
+									sender.sendMessage("The region is now blocking bows.");
+									regionList.put("Worlds." + worldName + ".Regions." + r.getId(), true);
+									saveRegion();
 								}
+							}
 							
 						}else if (regions.size() >= 2){
 							sender.sendMessage(StringUtility.format("&6&oYou're currently in multiple regions, please click on which region you'd like to add."));
@@ -179,7 +204,6 @@ public class AntiBow extends JavaPlugin implements Listener{
 								}
 							}
 						}
-					
 					}else if (args[0].equalsIgnoreCase("remove")){
 
 						
@@ -194,6 +218,8 @@ public class AntiBow extends JavaPlugin implements Listener{
 									if (config.contains("Worlds." + worldName + ".Regions." + r.getId())){
 										config.set("Worlds." + worldName + ".Regions." + r.getId(), false);
 										sender.sendMessage(StringUtility.format("&6&oThe region: " + r.getId() + " has been removed."));
+										regionList.remove("Worlds." + worldName + ".Regions." + r.getId(), true);
+										saveRegion();
 									}else{
 										sender.sendMessage(StringUtility.format("&6&oThe region " + r.getId() + " isnt' blocking bows."));
 									}
@@ -220,19 +246,25 @@ public class AntiBow extends JavaPlugin implements Listener{
 							ProtectedRegion region = WGBukkit.getPlugin().getRegionManager(ofPlayer).getRegion(args[1]);
 							config.set("Worlds." + worldName + ".Regions." + region.getId(), false);
 							sender.sendMessage(StringUtility.format("&6&oRegion " + region.getId() + " is no longer being blocked"));
+							regionList.remove("Worlds." + worldName + ".Regions." + region.getId(), true);
+							saveRegion();
 						}catch(Exception e){
-							sender.sendMessage(StringUtility.format("&6&oThe region you specified wasn't found."));
+							sendLogs("Error #4 on /ab remove"+ "<br>" + "Usage: " + cmd.getName() + " " +args[0] + " " +args[1]);
+							sender.sendMessage(StringUtility.format("&6&oThe region you specified wasn't found, please ensure you're in the same world as the region."));
 						}
 					}else if (args[0].equalsIgnoreCase("add")){
 						try{
 							ProtectedRegion region = WGBukkit.getPlugin().getRegionManager(ofPlayer).getRegion(args[1]);
 							config.set("Worlds." + worldName + ".Regions." + region.getId(), true);
 							sender.sendMessage(StringUtility.format("&6&oRegion " + region.getId() + " is now being blocked"));
+							regionList.put("Worlds." + worldName + ".Regions." + region.getId(), true);
+							saveRegion();
 						}catch(Exception e){
-							sender.sendMessage(StringUtility.format("&6&oThe region you specified wasn't found."));
+							sendLogs("Error #5 on /ab add "+ "<br>" + "Usage: " + cmd.getName() + " " +args[0] + " " +args[1]);
+							sender.sendMessage(StringUtility.format("&6&oThe region you specified wasn't found, please ensure you're in the same world as the region."));
 						}
 					}
-					  saveRegion();
+					  
 				}
 			}else{
 				sender.sendMessage(StringUtility.format(config.getString("Messages.NoPermission")));
@@ -246,46 +278,34 @@ public class AntiBow extends JavaPlugin implements Listener{
 
 	@EventHandler(priority=EventPriority.MONITOR)
 	public void onBowFire(EntityShootBowEvent event){
-		/*
-		 * DEBUGGING
-		 * ENSURE TO REMOVE
-		 * 
-		 */
-		
-		for (int i = 0; i < regionList.size(); i++){
-			System.out.println(regionList.get(i));
-		}
-
-		
-		buildRegionsList();
-		
+			
 		if (event.getEntityType().equals(org.bukkit.entity.EntityType.PLAYER)){
 			UUID PlayerID = event.getEntity().getUniqueId();
-			Player parsePlayer;
-			System.out.println(PlayerID);
 			try{
-				parsePlayer = Bukkit.getServer().getPlayer(PlayerID);
-			  
-				
-				if (regions.size() == 0){
-				  
-				}else if (regions.size() == 1){
-					parsePlayer.sendMessage(StringUtility.format(config.getString("Messages.NotAllowed").replaceAll("%REGION%", regions.get(0).getId())));
+				Player parsePlayer = Bukkit.getServer().getPlayer(PlayerID);
+				if (isPlayerInBlockedRegion(parsePlayer)){
 					event.setCancelled(true);
-				}else if (regions.size() >= 2){
-					parsePlayer.sendMessage(StringUtility.format(config.getString("Messages.NotAllowed").replaceAll("%REGION%", regions.get(0).getId())));
-					event.setCancelled(true);
+					parsePlayer.sendMessage(StringUtility.format(blocked_region.replaceAll("%REGION%", region).replaceAll("%PLAYER%", parsePlayer.getName())));
 				}
-
-			  
 			}catch(Exception e){
-				System.out.println("There has been an error, I'm automatically sending details to ElmHoe to get this resolved. Thank you.");
-				if (sendLogs(e) == true){}
+				Bukkit.getLogger().warning("Unknown error...");
+				sendLogs("Error #6 (EntityShootBowEvent)" + "\n" + e.getMessage());
 			}
 		}
 	}
   
-	public boolean isPlayerInBlockedRegion(Player p, ProtectedRegion region){
+	public boolean isPlayerInBlockedRegion(Player p){
+		ApplicableRegionSet playerRegions = WGBukkit.getRegionManager(p.getWorld()).getApplicableRegions(p.getLocation());
+		String mapQuery = "Worlds." + p.getWorld().getName() + ".Regions.";
+		for (ProtectedRegion reg : playerRegions.getRegions()){
+			region = reg.getId();
+			if (regionList.containsKey(mapQuery + reg.getId())){
+				if (regionList.get((mapQuery + reg.getId()) == "true")){
+					return true;
+				}
+			}	
+			return false;
+		}
 		return false;
   }
 	
@@ -295,38 +315,54 @@ public class AntiBow extends JavaPlugin implements Listener{
 		 * 
 		 * It'll load all date from the config, and store it in an arraylist
 		 */
+		regionList = new HashMap<String,Boolean>();
 		List<World> worlds = Bukkit.getWorlds();
-		Bukkit.getServer().getLogger().warning(worlds.toString());
+		int saveConfigOrNah = 0;
 		for (int i = 0; i < worlds.size(); i++){
 			Map<String, ProtectedRegion> Regions = WGBukkit.getRegionManager(worlds.get(i)).getRegions();
 			String worldName = worlds.get(i).getName();
-			try{
-				for (ProtectedRegion key : Regions.values()){
-					Bukkit.getLogger().warning(Regions.get(key).getId().toString());
-					regionList.addAll(config.getStringList("Worlds." + worldName + ".Regions." + key));
-				}
-			}catch(Exception e){
-				Bukkit.getLogger().warning("World: " + worldName + " doesn't currently exsist in config, writing now.");
-				for (int ii = 0; ii < Regions.size(); ii++){
-					config.set("Worlds." + worldName + ".Regions" + Regions.get(i), false);
-					saveConfig();
-					Bukkit.getLogger().warning(Regions.get(i).toString());
+			
+			for (String key : Regions.keySet()){
+				if (!(config.contains("Worlds." + worldName + ".Regions." + Regions.get(key).getId()))){
+					config.set("Worlds." + worldName + ".Regions." + Regions.get(key).getId(), false);
+					Bukkit.getLogger().warning("Wrote: '" + "Worlds." + worldName + ".Regions." + Regions.get(key).getId() + "' to config.");
+					saveConfigOrNah = 1;
+					regionList.put("Worlds." + worldName + ".Regions." + Regions.get(key).getId(), config.getBoolean("Worlds." + worldName + ".Regions." + Regions.get(key).getId()));
+				}else{
+					regionList.put("Worlds." + worldName + ".Regions." + Regions.get(key).getId(), config.getBoolean("Worlds." + worldName + ".Regions." + Regions.get(key).getId()));
 				}
 			}
-			/*
-			 *  DEBUGGING
-			 */
-			System.out.println(config.getStringList("Worlds." + worldName + ".Regions"));
-			
+		}
+		if (saveConfigOrNah == 1){
+			saveRegion();
+		}
+		try{
+			blocked_region = config.getString("Messages.NotAllowed");
+		}catch(Exception e){
+			config.set("Messages.NotAllowed", "&7[&4Anti&7-&4Bow&7] &6&oSorry, but you''re not allowed to use the bow in the region: %REGION%");
 		}
 	}
 	
-	public boolean sendLogs(Exception e){
+	public void sendLogs(String error){
 		/*
 		 * Used for sending errors to myself to investigate.
 		 * 
 		 */
-		
-		return true;
+		if (config.contains("AutomaticallySendLogs")){
+			if (config.getBoolean("AutomaticallySendLogs") == false){
+			}else{
+				DateFormat dateFormat = new SimpleDateFormat("[dd/MM/yyyy - HH:mm:ss]");
+				Date date = new Date();
+
+				try{
+					HTTPUtility.sendPost("Time it went wrong: " + dateFormat.format(date) + defaultMSG + error + "<br>"+"------------END OF LOG------------");
+					Bukkit.getLogger().warning("Message has been sent to Admin@ElmHoe.co.uk for further investigation to this error, apologies about this.");
+				}catch(Exception e1){
+					Bukkit.getLogger().warning("Unabled to send logs...");
+				}
+			}
+		}else{
+			config.set("AutomaticallySendLogs", true);
+		}
 	}
 }

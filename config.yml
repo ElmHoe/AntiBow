@@ -1,11 +1,16 @@
-# Regions: This is the list of all regions on the server, in all worlds.
-# If you want to disable bows in any region, change that flag from false to true.
-# Messages: This contains the messages to send to the player, currently only one message.
-# Formatting, if you want to you can use %REGION% which is replaced with the region name.
-# ChatColor is supported within the denied message. Use the & Symbol and colors of your choice.
+# This plugin supports Chat Color with the '&' Symbol.
 
+# Options:
+# %PLAYER% is replaced with the players name.
+# %REGION% is replaced with the region that is blocked.
+Messages:
+  NotAllowed: '&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%, but you''re not allowed to use the
+    bow in the region: %REGION%'
+    
+# This lists all the regions in all the worlds, if you decide to change any manually.
 Worlds:
   world:
-Messages:
-  NotAllowed: "&7[&4Anti&7-&4Bow&7] &6&oSorry, but you're not allowed to use the bow in the region: %REGION%"
-AutomaticallySendErrorLogs:
+  
+# This is for the future, where logs will auto-send to me when an error is thrown. 
+# Setting it to false, will of course, not send any logs to me for me to investigate.
+AutomaticallySendLogs: true
