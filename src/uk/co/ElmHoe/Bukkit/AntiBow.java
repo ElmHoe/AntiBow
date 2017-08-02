@@ -23,7 +23,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -103,9 +102,9 @@ public class AntiBow extends JavaPlugin implements Listener{
 		}catch(Exception e){sendLogs("Error #2 on Registering Events." + "<br>" + e.getMessage());}
 		  
 		  
-		Bukkit.getLogger().info("This version of AntiBow was built against 1.12.");
-		Bukkit.getLogger().info("For any lower or BETA Builds, please go to Github.com/ElmHoe/AntiBow");
-		
+		Bukkit.getLogger().info("This version of AntiBow was built against & for 1.12.");
+		Bukkit.getLogger().info("");
+		Bukkit.getLogger().info("PLEASE! Send me improvements, bugs, etc to https://github.com/ElmHoe/AntiBow");
 		buildRegionsList();
 		Bukkit.getLogger().info("----------- AntiBow Enabled - v " + version + " Build MC-1.12 -----------");
 	}
@@ -176,6 +175,7 @@ public class AntiBow extends JavaPlugin implements Listener{
 				
 				}else if (args.length == 1){
 					if (args[0].equalsIgnoreCase("add")){
+						regions.clear();
 						for (ProtectedRegion set : WGBukkit.getRegionManager(ofPlayer).getApplicableRegions(p.getLocation())){
 							regions.add(set);
 						}
@@ -187,7 +187,7 @@ public class AntiBow extends JavaPlugin implements Listener{
 									sender.sendMessage("The region: " + r.getId() + " is already blocking bows.");
 								}else{
 									config.set("Worlds." + worldName + ".Regions." + r.getId(), true);
-									sender.sendMessage("The region is now blocking bows.");
+									sender.sendMessage(StringUtility.format("&6&oThe region: " + r.getId() + " is now blocking bows."));
 									regionList.put("Worlds." + worldName + ".Regions." + r.getId(), true);
 									saveRegion();
 								}
@@ -205,8 +205,7 @@ public class AntiBow extends JavaPlugin implements Listener{
 							}
 						}
 					}else if (args[0].equalsIgnoreCase("remove")){
-
-						
+						regions.clear();
 						for (ProtectedRegion set : WGBukkit.getRegionManager(ofPlayer).getApplicableRegions(p.getLocation())){
 							regions.add(set);
 						}
@@ -280,12 +279,12 @@ public class AntiBow extends JavaPlugin implements Listener{
 	public void onBowFire(EntityShootBowEvent event){
 			
 		if (event.getEntityType().equals(org.bukkit.entity.EntityType.PLAYER)){
-			UUID PlayerID = event.getEntity().getUniqueId();
 			try{
-				Player parsePlayer = Bukkit.getServer().getPlayer(PlayerID);
+				Player parsePlayer = Bukkit.getServer().getPlayer(event.getEntity().getUniqueId());
 				if (isPlayerInBlockedRegion(parsePlayer)){
 					event.setCancelled(true);
-					parsePlayer.sendMessage(StringUtility.format(blocked_region.replaceAll("%REGION%", region).replaceAll("%PLAYER%", parsePlayer.getName())));
+					String formattedMsg = blocked_region.replaceAll("%REGION%", region.toString()).replaceAll("%PLAYER%", parsePlayer.getDisplayName() );
+					parsePlayer.sendMessage(StringUtility.format(formattedMsg));
 				}
 			}catch(Exception e){
 				Bukkit.getLogger().warning("Unknown error...");
@@ -299,12 +298,10 @@ public class AntiBow extends JavaPlugin implements Listener{
 		String mapQuery = "Worlds." + p.getWorld().getName() + ".Regions.";
 		for (ProtectedRegion reg : playerRegions.getRegions()){
 			region = reg.getId();
-			if (regionList.containsKey(mapQuery + reg.getId())){
-				if (regionList.get((mapQuery + reg.getId()) == "true")){
-					return true;
-				}
-			}	
-			return false;
+			Boolean value = regionList.get(mapQuery + reg.getId());
+			if (value){
+				return true;
+			}
 		}
 		return false;
   }
@@ -339,7 +336,8 @@ public class AntiBow extends JavaPlugin implements Listener{
 		try{
 			blocked_region = config.getString("Messages.NotAllowed");
 		}catch(Exception e){
-			config.set("Messages.NotAllowed", "&7[&4Anti&7-&4Bow&7] &6&oSorry, but you''re not allowed to use the bow in the region: %REGION%");
+			config.set("Messages.NotAllowed", "&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you''re not allowed to use the bow in the region: %REGION%");
+			blocked_region = "&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you''re not allowed to use the bow in the region: %REGION%";
 		}
 	}
 	
@@ -356,9 +354,7 @@ public class AntiBow extends JavaPlugin implements Listener{
 
 				try{
 					HTTPUtility.sendPost("Time it went wrong: " + dateFormat.format(date) + defaultMSG + error + "<br>"+"------------END OF LOG------------");
-					Bukkit.getLogger().warning("Message has been sent to Admin@ElmHoe.co.uk for further investigation to this error, apologies about this.");
 				}catch(Exception e1){
-					Bukkit.getLogger().warning("Unabled to send logs...");
 				}
 			}
 		}else{

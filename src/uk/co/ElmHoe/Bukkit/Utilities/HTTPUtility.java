@@ -44,7 +44,7 @@ public class HTTPUtility {
 			in.close();
 	
 			//print result
-			Bukkit.getLogger().info("Success - logs have been sent.");
+			Bukkit.getLogger().info("An error was thrown and sent to Josh to investigate.");
 		}catch(Exception e){
 			e.printStackTrace();
 			Bukkit.getLogger().warning("Failed to send error logs, this got awkward...");

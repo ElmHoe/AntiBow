@@ -4,7 +4,7 @@
 # %PLAYER% is replaced with the players name.
 # %REGION% is replaced with the region that is blocked.
 Messages:
-  NotAllowed: '&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%, but you''re not allowed to use the
+  NotAllowed: '&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you''re not allowed to use the
     bow in the region: %REGION%'
     
 # This lists all the regions in all the worlds, if you decide to change any manually.
