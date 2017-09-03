@@ -3,10 +3,11 @@
 # Options:
 # %PLAYER% is replaced with the players name.
 # %REGION% is replaced with the region that is blocked.
-Messages:
+DefaultMessages:
   NotAllowed: '&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you''re not allowed to use the
     bow in the region: %REGION%'
-    
+  NoPermission: '&7[&4Anti&7-&4Bow&7] &6&oNo Permission. OP/Antibow.add required.
+  
 # This lists all the regions in all the worlds, if you decide to change any manually.
 Worlds:
   world:
@@ -14,3 +15,7 @@ Worlds:
 # This is for the future, where logs will auto-send to me when an error is thrown. 
 # Setting it to false, will of course, not send any logs to me for me to investigate.
 AutomaticallySendLogs: true
+
+# This is if you want OPs to bypass region limitations.
+# Note, antibow.bypass permission will also bypass settings depending on if this setting is enabled or not.
+OPsToBypass: false
