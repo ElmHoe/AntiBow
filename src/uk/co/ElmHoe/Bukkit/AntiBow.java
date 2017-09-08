@@ -51,6 +51,9 @@ public class AntiBow extends JavaPlugin implements Listener {
 	private static String region;
 	private static Boolean OPsToBypass;
 	
+	//To be set to false to disable. Debug Logging affects #debuggingLogs();
+	private Boolean debugLogging = true;
+	
 	private void loadYamls() {
 		try {
 			this.config.load(this.configFile);
@@ -310,6 +313,11 @@ public class AntiBow extends JavaPlugin implements Listener {
 		return false;
 	}
 
+	/**
+	 * <h3  style="font-style: italic;">onBowFire() Documentation</h3>
+	 * 
+	 * @param event		When the EntityShootBowEvent is triggered.
+	 */
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onBowFire(EntityShootBowEvent event) {
 
@@ -339,6 +347,14 @@ public class AntiBow extends JavaPlugin implements Listener {
 		}
 	}
 
+	/** 
+	 * <h3 style="font-style: italic;">isPlayerInBlockedRegion() Documentation. </h3>
+	 * 
+	 * This function will check if a player is in a blocked region or not.
+	 * 
+	 * @param	p		The player to check if they're in a blocked region.
+	 * @return	Boolean	True/False. True if the player IS in a blocked region, false otherwise.
+	 */
 	public boolean isPlayerInBlockedRegion(Player p) {
 		ApplicableRegionSet playerRegions = WGBukkit.getRegionManager(p.getWorld())
 				.getApplicableRegions(p.getLocation());
@@ -346,14 +362,25 @@ public class AntiBow extends JavaPlugin implements Listener {
 		for (ProtectedRegion reg : playerRegions.getRegions()) {
 			region = reg.getId();
 			Boolean value = regionList.get(mapQuery + reg.getId());
-			if (value) {
-				return true;
-			}
+			
+			if (value) { return true;	}
 		}
 		return false;
 	}
 
-	public void buildRegionsList() {
+	/**
+	 * <h3 style="font-style: italic;">buildRegionList() Documentation </h3>
+	 * <a style=color:lightgreen;> 
+	 * The tool used to pre-define the configuration file.
+	 * <br>
+	 * Rather than loading the configuration multiple times during use.
+	 * Load the config as a whole when the plugin initiates and only write to it when in use.
+	 * <br>
+	 * This helps take the stress away from the server when in-use.
+	 * </a>
+	 *  
+	 */
+	public void buildRegionsList(){
 		/*
 		 * Used for building the region list.
 		 * 
@@ -379,7 +406,7 @@ public class AntiBow extends JavaPlugin implements Listener {
 							config.getBoolean("Worlds." + worldName + ".Regions." + Regions.get(key).getId()));
 				}
 			}
-		}
+		}	
 		if (config.contains("Messages.NotAllowed")) {
 			String oldMsg = config.getString("Messages.NotAllowed");
 			config.set("Messages.NotAllowed", null);
@@ -389,6 +416,7 @@ public class AntiBow extends JavaPlugin implements Listener {
 		if (config.contains("Messages.NoPermission")) {
 			String oldMsg = config.getString("Messages.NoPermission");
 			config.set("Messages.NoPermission", null);
+			config.set("Messages", null);
 			config.set("DefaultMessages.NoPermission", oldMsg);
 			saveConfigOrNah = 1;
 		}		
@@ -421,9 +449,55 @@ public class AntiBow extends JavaPlugin implements Listener {
 		}
 	}
 
-	/*
-	 * public void sendLogs(String error){
+	/**
+	 * <h3 style="font-style: italic;">debuggingLogs() Documentation</h3>
+	 * This is to be used when debugging problems.
+	 * <p>
+	 * It'll spit out and show you any errors when and where they occur for quick resolution.
 	 * 
+	 * 
+	 * @param 	log 		The log will be the String that is sent to the console.
+	 * @param	severity	The severity of the log. 
+	 * 						1 is INFO
+	 * 						2 is WARNING
+	 * 						3 is SEVERE 
+	 * @author Joshua Fennell.
+	 * 
+	 * 
+	 */
+	public void debuggingLogs(String log, Integer severity) {
+		if (debugLogging == true) {
+			if (severity == 1) {
+				Bukkit.getLogger().info(log.toString());
+			}else if (severity == 2) {
+				Bukkit.getLogger().warning(log.toString());
+			}else if (severity == 3) {
+				for (int i = 0; i < 5; i++) {
+					Bukkit.getLogger().info(" ");
+				}
+				Bukkit.getLogger().severe(log.toString());
+				for (int i = 0; i < 5; i++) {
+					Bukkit.getLogger().info(" ");
+				}
+			}
+		}else {
+			//Do nothing.
+		}
+	}
+
+	/**	
+	 * <h3 style="font-style: italic;">sendLogs Documentation </h3>
+	 * 
+	 * Used to sendLogs to a server for me to investigate directly.
+	 * 
+	 * Address would be *.elmhoe.co.uk/logging/send_logs.php
+	 * 
+	 * Logs are always sent via POST to the server.
+	 * 
+	 * @param	error	The string error message to send for investigation.
+	 */
+	public void sendLogs(String error){
+	/* 
 	 * Used for sending errors to myself to investigate.
 	 * 
 	 * 
@@ -435,6 +509,8 @@ public class AntiBow extends JavaPlugin implements Listener {
 	 * try{ HTTPUtility.sendPost("Time it went wrong: " + dateFormat.format(date) +
 	 * defaultMSG + error + "<br>"+"------------END OF LOG------------");
 	 * }catch(Exception e1){ } } }else{ config.set("AutomaticallySendLogs", true); }
-	 * }
+	 * 
 	 */
+	}
+
 }
