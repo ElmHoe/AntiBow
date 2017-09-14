@@ -44,7 +44,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class AntiBow extends JavaPlugin implements Listener {
 	File configFile;
 	FileConfiguration config;
-	private final static String version = "1.1 Beta";
+	private final static String version = "1.2 Beta";
 	private static ArrayList<ProtectedRegion> regions = new ArrayList<>();
 	private static HashMap<String, Boolean> regionList;
 	private static String blocked_region;
@@ -315,7 +315,7 @@ public class AntiBow extends JavaPlugin implements Listener {
 
 		if (event.getEntityType().equals(org.bukkit.entity.EntityType.PLAYER)) {
 			try {
-				Player parsePlayer = Bukkit.getServer().getPlayer(event.getEntity().getUniqueId());
+				Player parsePlayer = Bukkit.getServer().getPlayer(event.getEntity().getName().toString());
 				if (!(parsePlayer.isOp()) || (!(parsePlayer.hasPermission("antbow.bypass")))) {
 					if (isPlayerInBlockedRegion(parsePlayer)) {
 						event.setCancelled(true);
@@ -380,18 +380,6 @@ public class AntiBow extends JavaPlugin implements Listener {
 				}
 			}
 		}
-		if (config.contains("Messages.NotAllowed")) {
-			String oldMsg = config.getString("Messages.NotAllowed");
-			config.set("Messages.NotAllowed", null);
-			config.set("DefaultMessages.NotAllowed", oldMsg);
-			saveConfigOrNah = 1;
-		}
-		if (config.contains("Messages.NoPermission")) {
-			String oldMsg = config.getString("Messages.NoPermission");
-			config.set("Messages.NoPermission", null);
-			config.set("DefaultMessages.NoPermission", oldMsg);
-			saveConfigOrNah = 1;
-		}		
 		try {
 			if (!(config.contains("OPsToBypass"))) {
 				config.set("OPsToBypass", false);
@@ -410,8 +398,8 @@ public class AntiBow extends JavaPlugin implements Listener {
 		
 		if (!(config.contains("DefaultMessages.NotAllowed"))) {
 			config.set("DefaultDefaultMessages.NotAllowed",
-					"&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you''re not allowed to use the bow in the region: %REGION%");
-			blocked_region = config.getString("DefaultMessages.NotAllowed");
+					"&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you're not allowed to use the bow in the region: %REGION%");
+			blocked_region = "&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you're not allowed to use the bow in the region: %REGION%";
 			saveConfigOrNah = 1;
 		}else {
 			blocked_region = config.getString("DefaultMessages.NotAllowed");
