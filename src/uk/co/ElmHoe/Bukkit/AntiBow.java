@@ -44,7 +44,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class AntiBow extends JavaPlugin implements Listener {
 	File configFile;
 	FileConfiguration config;
-	private final static String version = "1.2 Beta";
+	private final static String version = "1.2.2 Beta";
 	private static ArrayList<ProtectedRegion> regions = new ArrayList<>();
 	private static HashMap<String, Boolean> regionList;
 	private static String blocked_region;
@@ -273,7 +273,6 @@ public class AntiBow extends JavaPlugin implements Listener {
 							regionList.put("Worlds." + worldName + ".Regions." + region.getId(), true);
 							saveRegion();
 						} catch (Exception e) {
-							e.printStackTrace();
 							// sendLogs("Error #5 on /ab add "+ "<br>" + "Usage: " + cmd.getName() + " "
 							// +args[0] + " " +args[1]);
 							sender.sendMessage(StringUtility.format(
