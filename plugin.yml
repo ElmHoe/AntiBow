@@ -1,6 +1,6 @@
 name: AntiBow
 main: uk.co.ElmHoe.Bukkit.AntiBow
-version: 1.2.2
+version: 1.2.3
 author: ElmHoe
 load: POSTWORLD
 depend: [WorldGuard, WorldEdit]
