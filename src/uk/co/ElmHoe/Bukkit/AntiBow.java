@@ -273,7 +273,6 @@ public class AntiBow extends JavaPlugin implements Listener {
 							regionList.put("Worlds." + worldName + ".Regions." + region.getId(), true);
 							saveRegion();
 						} catch (Exception e) {
-							e.printStackTrace();
 							// sendLogs("Error #5 on /ab add "+ "<br>" + "Usage: " + cmd.getName() + " "
 							// +args[0] + " " +args[1]);
 							sender.sendMessage(StringUtility.format(
