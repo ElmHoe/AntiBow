@@ -1,5 +1,6 @@
 package uk.co.ElmHoe.Bukkit;
 
+import com.sk89q.minecraft.util.commands.Console;
 import com.sk89q.worldguard.bukkit.WGBukkit;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
@@ -138,107 +139,22 @@ public class AntiBow extends JavaPlugin implements Listener {
 
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
 		if (cmd.getName().equalsIgnoreCase("antibow")) {
-			Player p = (Player) sender;
-			World ofPlayer = p.getWorld();
-			String worldName = ofPlayer.getName();
-
-			if (sender.hasPermission("antibow.add") || (sender.isOp() == true)) {
-
-				if (args.length == 0) {
-
+			if (!(sender instanceof Player)){
+				if (args.length == 0){
 					sender.sendMessage(StringUtility.format("&7&m-----[&4Anti&7-&4Bow&7&m]-----"));
-					sender.sendMessage(StringUtility.format("&6'/antibow add <region>' &7&owill add a user-defined region."));
-					sender.sendMessage(StringUtility.format("&6'/antibow add' &7&owill add the current region you are within."));
-					sender.sendMessage(StringUtility.format("&6'/antibow remove <region>' &7&owill remove a user-defined region"));
-					sender.sendMessage(StringUtility.format("&6'/antibow remove' &7&owill remove the current region you are within."));
+					sender.sendMessage(StringUtility.format("&6Unfortunately, some commands are in-game only. Access from console is limited for now."));
 					sender.sendMessage(StringUtility.format("&6'/antibow msg <message>' &7&owill change the default message when a player attempts to shoot."));
 					sender.sendMessage(StringUtility.format("&6'/antibow msg-reset' &7&owill set the config message back to the default."));
 					sender.sendMessage(StringUtility.format("&6'/antibow reload' &7&owill reload the configuration file."));
 					sender.sendMessage(StringUtility.format("&7&m-----[&4Anti&7-&4Bow&7&m]-----"));
-
-				} else if (args.length == 1) {
-					if (args[0].equalsIgnoreCase("add")) {
-						regions.clear();
-						for (ProtectedRegion set : WGBukkit.getRegionManager(ofPlayer)
-								.getApplicableRegions(p.getLocation())) {
-							regions.add(set);
-						}
-						if (regions.size() == 0) {
-							sender.sendMessage(StringUtility.format("&6&oYou're currently not in any region at all."));
-						} else if (regions.size() == 1) {
-							for (ProtectedRegion r : WGBukkit.getRegionManager(ofPlayer)
-									.getApplicableRegions(p.getLocation())) {
-								if (config.getBoolean("Worlds." + worldName + ".Regions." + r.getId()) == true) {
-									sender.sendMessage("The region: " + r.getId() + " is already blocking bows.");
-								} else {
-									config.set("Worlds." + worldName + ".Regions." + r.getId(), true);
-									sender.sendMessage(StringUtility
-											.format("&6&oThe region: " + r.getId() + " is now blocking bows."));
-									regionList.put("Worlds." + worldName + ".Regions." + r.getId(), true);
-									saveRegion();
-								}
-							}
-
-						} else if (regions.size() >= 2) {
-							sender.sendMessage(StringUtility.format(
-									"&6&oYou're currently in multiple regions, please click on which region you'd like to add."));
-							for (ProtectedRegion r : WGBukkit.getRegionManager(ofPlayer)
-									.getApplicableRegions(p.getLocation())) {
-								if (config.getBoolean("Worlds." + worldName + ".Regions." + r.getId()) == false) {
-									TextComponent message = new TextComponent("Region: " + r.getId());
-									message.setColor(ChatColor.YELLOW);
-									message.setClickEvent(
-											new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/antibow add " + r.getId()));
-									p.spigot().sendMessage(message);
-								}
-							}
-						}
-					} else if (args[0].equalsIgnoreCase("msg-reset")) {
+				}else if (args.length == 1){
+					if (args[0].equalsIgnoreCase("msg-reset")) {
 						config.set("DefaultMessages.NotAllowed",
 								"&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you're not allowed to use the bow in the region: %REGION%");
 						blocked_region = "&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you're not allowed to use the bow in the region: %REGION%";
 						sender.sendMessage(StringUtility.format("&6Default message has been set."));
 						saveRegion();
-					} else if (args[0].equalsIgnoreCase("remove")) {
-						regions.clear();
-						for (ProtectedRegion set : WGBukkit.getRegionManager(ofPlayer)
-								.getApplicableRegions(p.getLocation())) {
-							regions.add(set);
-						}
-						if (regions.size() == 0) {
-							sender.sendMessage(StringUtility.format("&6&oYou're currently not in any region at all."));
-
-						} else if (regions.size() == 1) {
-							for (ProtectedRegion r : WGBukkit.getRegionManager(ofPlayer)
-									.getApplicableRegions(p.getLocation())) {
-								if (config.contains("Worlds." + worldName + ".Regions." + r.getId())) {
-									config.set("Worlds." + worldName + ".Regions." + r.getId(), false);
-									sender.sendMessage(StringUtility
-											.format("&6&oThe region: " + r.getId() + " has been removed."));
-									regionList.remove("Worlds." + worldName + ".Regions." + r.getId(), true);
-									saveRegion();
-								} else {
-									sender.sendMessage(StringUtility
-											.format("&6&oThe region " + r.getId() + " isnt' blocking bows."));
-								}
-							}
-
-						} else if (regions.size() >= 2) {
-							sender.sendMessage(StringUtility.format(
-									"&6&oYou're currently in multiple regions, please click on which region you'd like to remove."));
-							for (ProtectedRegion r : WGBukkit.getRegionManager(ofPlayer)
-									.getApplicableRegions(p.getLocation())) {
-								if (config.getBoolean("Worlds." + worldName + ".Regions." + r.getId()) == true) {
-									TextComponent message = new TextComponent("Region: " + r.getId());
-									message.setColor(ChatColor.YELLOW);
-									message.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
-											"/antibow remove " + r.getId()));
-									p.spigot().sendMessage(message);
-								}
-							}
-						}
-
-					} else if (args[0].equalsIgnoreCase("reload")){
+					}else if (args[0].equalsIgnoreCase("reload")){
 						/*
 						 * Reloads the configuration from file.
 						 */
@@ -248,61 +164,191 @@ public class AntiBow extends JavaPlugin implements Listener {
 					} else {
 						sender.sendMessage(StringUtility.format("Invalid usage, please check usage by using /antibow"));
 					}
-				} else if (args.length == 2) {
-					if (args[0].equalsIgnoreCase("remove")) {
-						try {
-							ProtectedRegion region = WGBukkit.getPlugin().getRegionManager(ofPlayer).getRegion(args[1]);
-							config.set("Worlds." + worldName + ".Regions." + region.getId(), false);
-							sender.sendMessage(StringUtility
-									.format("&6&oRegion " + region.getId() + " is no longer being blocked"));
-							regionList.remove("Worlds." + worldName + ".Regions." + region.getId(), true);
-							saveRegion();
-						} catch (Exception e) {
-							e.printStackTrace();
-							// sendLogs("Error #4 on /ab remove"+ "<br>" + "Usage: " + cmd.getName() + " "
-							// +args[0] + " " +args[1]);
-							sender.sendMessage(StringUtility.format(
-									"&6&oThe region you specified wasn't found, please ensure you're in the same world as the region."));
-						}
-					} else if (args[0].equalsIgnoreCase("add")) {
-						try {
-							ProtectedRegion region = WGBukkit.getPlugin().getRegionManager(ofPlayer).getRegion(args[1]);
-							config.set("Worlds." + worldName + ".Regions." + region.getId(), true);
-							sender.sendMessage(
-									StringUtility.format("&6&oRegion " + region.getId() + " is now being blocked"));
-							regionList.put("Worlds." + worldName + ".Regions." + region.getId(), true);
-							saveRegion();
-						} catch (Exception e) {
-							// sendLogs("Error #5 on /ab add "+ "<br>" + "Usage: " + cmd.getName() + " "
-							// +args[0] + " " +args[1]);
-							sender.sendMessage(StringUtility.format(
-									"&6&oThe region you specified wasn't found, please ensure you're in the same world as the region."));
-						}
-					}
-				}if (args.length >= 2) {
+				}else if (args.length >= 2){
 					if (args[0].equalsIgnoreCase("msg")) {
 						String newMsg = "";
 						for (int i = 1; i < args.length; i++) {
 							newMsg = newMsg + args[i] + " ";
 						}
 
-					sender.sendMessage(newMsg);
 					config.set("DefaultMessages.NotAllowed", newMsg);
 					blocked_region = newMsg;
 					sender.sendMessage(StringUtility.format("&6&oSuccess, message has now been set to: " + newMsg));
 					
 					saveRegion();
+					}else{
+						sender.sendMessage(StringUtility.format("&7&m-----[&4Anti&7-&4Bow&7&m]-----"));
+						sender.sendMessage(StringUtility.format("Invalid usage, please check usage by using /antibow"));
+						sender.sendMessage(StringUtility.format("&7&m-----[&4Anti&7-&4Bow&7&m]-----"));
 					}
-
 				}
-			} else {
-				try{
-					sender.sendMessage(StringUtility.format(config.getString("DefaultMessages.NoPermission")));
-				}catch(Exception e) {
-					config.set("DefaultMessages.NoPermission", "&7[&4Anti&7-&4Bow&7] &6&oNo Permission. OP/Antibow.add required.");
-					sender.sendMessage(StringUtility.format("&7[&4Anti&7-&4Bow&7] &6&oNo Permission. OP/Antibow.add required."));
-					saveRegion();
+			}else{
+				Player p = (Player) sender;
+				World ofPlayer = p.getWorld();
+				String worldName = ofPlayer.getName();
+	
+				if (sender.hasPermission("antibow.add") || (sender.isOp() == true)) {
+	
+					if (args.length == 0) {
+	
+						sender.sendMessage(StringUtility.format("&7&m-----[&4Anti&7-&4Bow&7&m]-----"));
+						sender.sendMessage(StringUtility.format("&6'/antibow add <region>' &7&owill add a user-defined region."));
+						sender.sendMessage(StringUtility.format("&6'/antibow add' &7&owill add the current region you are within."));
+						sender.sendMessage(StringUtility.format("&6'/antibow remove <region>' &7&owill remove a user-defined region"));
+						sender.sendMessage(StringUtility.format("&6'/antibow remove' &7&owill remove the current region you are within."));
+						sender.sendMessage(StringUtility.format("&6'/antibow msg <message>' &7&owill change the default message when a player attempts to shoot."));
+						sender.sendMessage(StringUtility.format("&6'/antibow msg-reset' &7&owill set the config message back to the default."));
+						sender.sendMessage(StringUtility.format("&6'/antibow reload' &7&owill reload the configuration file."));
+						sender.sendMessage(StringUtility.format("&7&m-----[&4Anti&7-&4Bow&7&m]-----"));
+	
+					} else if (args.length == 1) {
+						if (args[0].equalsIgnoreCase("add")) {
+							regions.clear();
+							for (ProtectedRegion set : WGBukkit.getRegionManager(ofPlayer)
+									.getApplicableRegions(p.getLocation())) {
+								regions.add(set);
+							}
+							if (regions.size() == 0) {
+								sender.sendMessage(StringUtility.format("&6&oYou're currently not in any region at all."));
+							} else if (regions.size() == 1) {
+								for (ProtectedRegion r : WGBukkit.getRegionManager(ofPlayer)
+										.getApplicableRegions(p.getLocation())) {
+									if (config.getBoolean("Worlds." + worldName + ".Regions." + r.getId()) == true) {
+										sender.sendMessage("The region: " + r.getId() + " is already blocking bows.");
+									} else {
+										config.set("Worlds." + worldName + ".Regions." + r.getId(), true);
+										sender.sendMessage(StringUtility
+												.format("&6&oThe region: " + r.getId() + " is now blocking bows."));
+										regionList.put("Worlds." + worldName + ".Regions." + r.getId(), true);
+										saveRegion();
+									}
+								}
+	
+							} else if (regions.size() >= 2) {
+								sender.sendMessage(StringUtility.format(
+										"&6&oYou're currently in multiple regions, please click on which region you'd like to add."));
+								for (ProtectedRegion r : WGBukkit.getRegionManager(ofPlayer)
+										.getApplicableRegions(p.getLocation())) {
+									if (config.getBoolean("Worlds." + worldName + ".Regions." + r.getId()) == false) {
+										TextComponent message = new TextComponent("Region: " + r.getId());
+										message.setColor(ChatColor.YELLOW);
+										message.setClickEvent(
+												new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/antibow add " + r.getId()));
+										p.spigot().sendMessage(message);
+									}
+								}
+							}
+						} else if (args[0].equalsIgnoreCase("msg-reset")) {
+							config.set("DefaultMessages.NotAllowed",
+									"&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you're not allowed to use the bow in the region: %REGION%");
+							blocked_region = "&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you're not allowed to use the bow in the region: %REGION%";
+							sender.sendMessage(StringUtility.format("&6Default message has been set."));
+							saveRegion();
+						} else if (args[0].equalsIgnoreCase("remove")) {
+							regions.clear();
+							for (ProtectedRegion set : WGBukkit.getRegionManager(ofPlayer)
+									.getApplicableRegions(p.getLocation())) {
+								regions.add(set);
+							}
+							if (regions.size() == 0) {
+								sender.sendMessage(StringUtility.format("&6&oYou're currently not in any region at all."));
+	
+							} else if (regions.size() == 1) {
+								for (ProtectedRegion r : WGBukkit.getRegionManager(ofPlayer)
+										.getApplicableRegions(p.getLocation())) {
+									if (config.contains("Worlds." + worldName + ".Regions." + r.getId())) {
+										config.set("Worlds." + worldName + ".Regions." + r.getId(), false);
+										sender.sendMessage(StringUtility
+												.format("&6&oThe region: " + r.getId() + " has been removed."));
+										regionList.remove("Worlds." + worldName + ".Regions." + r.getId(), true);
+										saveRegion();
+									} else {
+										sender.sendMessage(StringUtility
+												.format("&6&oThe region " + r.getId() + " isnt' blocking bows."));
+									}
+								}
+	
+							} else if (regions.size() >= 2) {
+								sender.sendMessage(StringUtility.format(
+										"&6&oYou're currently in multiple regions, please click on which region you'd like to remove."));
+								for (ProtectedRegion r : WGBukkit.getRegionManager(ofPlayer)
+										.getApplicableRegions(p.getLocation())) {
+									if (config.getBoolean("Worlds." + worldName + ".Regions." + r.getId()) == true) {
+										TextComponent message = new TextComponent("Region: " + r.getId());
+										message.setColor(ChatColor.YELLOW);
+										message.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
+												"/antibow remove " + r.getId()));
+										p.spigot().sendMessage(message);
+									}
+								}
+							}
+	
+						} else if (args[0].equalsIgnoreCase("reload")){
+							/*
+							 * Reloads the configuration from file.
+							 */
+							loadYamls();
+							buildRegionsList();
+							sender.sendMessage(StringUtility.format("&7[&4Anti&7-&4Bow&7] &6&oHey, I've reloaded the configuration for you."));
+						} else {
+							sender.sendMessage(StringUtility.format("Invalid usage, please check usage by using /antibow"));
+						}
+					} else if (args.length == 2) {
+						if (args[0].equalsIgnoreCase("remove")) {
+							try {
+								ProtectedRegion region = WGBukkit.getPlugin().getRegionManager(ofPlayer).getRegion(args[1]);
+								config.set("Worlds." + worldName + ".Regions." + region.getId(), false);
+								sender.sendMessage(StringUtility
+										.format("&6&oRegion " + region.getId() + " is no longer being blocked"));
+								regionList.remove("Worlds." + worldName + ".Regions." + region.getId(), true);
+								saveRegion();
+							} catch (Exception e) {
+								e.printStackTrace();
+								// sendLogs("Error #4 on /ab remove"+ "<br>" + "Usage: " + cmd.getName() + " "
+								// +args[0] + " " +args[1]);
+								sender.sendMessage(StringUtility.format(
+										"&6&oThe region you specified wasn't found, please ensure you're in the same world as the region."));
+							}
+						} else if (args[0].equalsIgnoreCase("add")) {
+							try {
+								ProtectedRegion region = WGBukkit.getPlugin().getRegionManager(ofPlayer).getRegion(args[1]);
+								config.set("Worlds." + worldName + ".Regions." + region.getId(), true);
+								sender.sendMessage(
+										StringUtility.format("&6&oRegion " + region.getId() + " is now being blocked"));
+								regionList.put("Worlds." + worldName + ".Regions." + region.getId(), true);
+								saveRegion();
+							} catch (Exception e) {
+								// sendLogs("Error #5 on /ab add "+ "<br>" + "Usage: " + cmd.getName() + " "
+								// +args[0] + " " +args[1]);
+								sender.sendMessage(StringUtility.format(
+										"&6&oThe region you specified wasn't found, please ensure you're in the same world as the region."));
+							}
+						}
+					}if (args.length >= 2) {
+						if (args[0].equalsIgnoreCase("msg")) {
+							String newMsg = "";
+							for (int i = 1; i < args.length; i++) {
+								newMsg = newMsg + args[i] + " ";
+							}
+	
+						config.set("DefaultMessages.NotAllowed", newMsg);
+						blocked_region = newMsg;
+						sender.sendMessage(StringUtility.format("&6&oSuccess, message has now been set to: " + newMsg));
+						
+						saveRegion();
+						}
+	
+					}
+				} else {
+					try{
+						sender.sendMessage(StringUtility.format(config.getString("DefaultMessages.NoPermission")));
+					}catch(Exception e) {
+						config.set("DefaultMessages.NoPermission", "&7[&4Anti&7-&4Bow&7] &6&oNo Permission. OP/Antibow.add required.");
+						sender.sendMessage(StringUtility.format("&7[&4Anti&7-&4Bow&7] &6&oNo Permission. OP/Antibow.add required."));
+						saveRegion();
+					}
 				}
+				return true;
 			}
 			return true;
 		}
