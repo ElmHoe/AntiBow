@@ -366,6 +366,7 @@ public class AntiBow extends JavaPlugin implements Listener {
 				if (!(parsePlayer.isOp()) || (!(parsePlayer.hasPermission("antbow.bypass")))) {
 					if (isPlayerInBlockedRegion(parsePlayer)) {
 						event.setCancelled(true);
+						parsePlayer.getInventory().removeItem(new ItemStack(Material.ARROW, 1));
 						parsePlayer.getInventory().addItem(new ItemStack(Material.ARROW, 1));
 						String formattedMsg = blocked_region.replaceAll("%REGION%", region.toString())
 								.replaceAll("%PLAYER%", parsePlayer.getDisplayName());
@@ -374,6 +375,7 @@ public class AntiBow extends JavaPlugin implements Listener {
 				}else if ((parsePlayer.isOp() || parsePlayer.hasPermission("antibow.bypass")) && (OPsToBypass == false)) {
 					if (isPlayerInBlockedRegion(parsePlayer)) {
 						event.setCancelled(true);
+						parsePlayer.getInventory().removeItem(new ItemStack(Material.ARROW, 1));
 						parsePlayer.getInventory().addItem(new ItemStack(Material.ARROW, 1));
 						String formattedMsg = blocked_region.replaceAll("%REGION%", region.toString())
 								.replaceAll("%PLAYER%", parsePlayer.getDisplayName());
