@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -38,6 +39,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityShootBowEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -364,6 +366,7 @@ public class AntiBow extends JavaPlugin implements Listener {
 				if (!(parsePlayer.isOp()) || (!(parsePlayer.hasPermission("antbow.bypass")))) {
 					if (isPlayerInBlockedRegion(parsePlayer)) {
 						event.setCancelled(true);
+						parsePlayer.getInventory().addItem(new ItemStack(Material.ARROW, 1));
 						String formattedMsg = blocked_region.replaceAll("%REGION%", region.toString())
 								.replaceAll("%PLAYER%", parsePlayer.getDisplayName());
 						parsePlayer.sendMessage(StringUtility.format(formattedMsg));
@@ -371,6 +374,7 @@ public class AntiBow extends JavaPlugin implements Listener {
 				}else if ((parsePlayer.isOp() || parsePlayer.hasPermission("antibow.bypass")) && (OPsToBypass == false)) {
 					if (isPlayerInBlockedRegion(parsePlayer)) {
 						event.setCancelled(true);
+						parsePlayer.getInventory().addItem(new ItemStack(Material.ARROW, 1));
 						String formattedMsg = blocked_region.replaceAll("%REGION%", region.toString())
 								.replaceAll("%PLAYER%", parsePlayer.getDisplayName());
 						parsePlayer.sendMessage(StringUtility.format(formattedMsg));
