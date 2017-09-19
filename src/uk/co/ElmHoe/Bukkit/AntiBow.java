@@ -384,15 +384,20 @@ public class AntiBow extends JavaPlugin implements Listener {
 		}
 	}
 
-	public boolean isPlayerInBlockedRegion(Player p) {
+	public boolean isPlayerInBlockedRegion(Player p) throws Exception {
 		ApplicableRegionSet playerRegions = WGBukkit.getRegionManager(p.getWorld())
 				.getApplicableRegions(p.getLocation());
 		String mapQuery = "Worlds." + p.getWorld().getName() + ".Regions.";
 		for (ProtectedRegion reg : playerRegions.getRegions()) {
 			region = reg.getId();
 			Boolean value = regionList.get(mapQuery + reg.getId());
-			if (value) {
-				return true;
+			try{
+				if (value) {
+					return true;
+				}
+			}catch(NullPointerException e){
+				HTTPUtility.sendPost("Player: " + p.toString()+ "\n" + " Region: " + region + "\n" + " Map Query: " + mapQuery + "\n" + " Value: " + value.toString() + "\n" +
+						" Exception: " + e.getMessage());
 			}
 		}
 		return false;

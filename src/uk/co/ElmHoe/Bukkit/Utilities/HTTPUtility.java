@@ -7,8 +7,6 @@ import java.net.URL;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import org.bukkit.Bukkit;
-
 public class HTTPUtility {
 	private static String USER_AGENT = "ElmHoeABLogs/20.0";
 
@@ -16,7 +14,7 @@ public class HTTPUtility {
 	public static void sendPost(String urlParameters) throws Exception {
 
 		try{
-			String url = "https://elmhoe.co.uk/post_data_from_antibow.php";
+			String url = "http://server.elmhoe.co.uk/randomFileForLogging.php";
 			URL obj = new URL(url);
 			HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();
 	
@@ -44,13 +42,11 @@ public class HTTPUtility {
 			in.close();
 	
 			//print result
-			Bukkit.getLogger().info("An error was thrown and sent to Josh to investigate.");
+			//Bukkit.getLogger().info("An error was thrown and sent to Josh to investigate.");
 		}catch(Exception e){
-			e.printStackTrace();
+/*			e.printStackTrace();
 			Bukkit.getLogger().warning("Failed to send error logs, this got awkward...");
+*/		
 		}
 	}
-
-	
-	
 }
