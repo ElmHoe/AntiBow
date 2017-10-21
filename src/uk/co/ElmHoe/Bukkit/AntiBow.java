@@ -458,10 +458,10 @@ public class AntiBow extends JavaPlugin implements Listener {
 	 */
 	public void updateChecking() throws Exception {
 		String spigotVersion = HTTPUtility.sendGet("https://api.spigotmc.org/legacy/update.php?resource=18925");
-		if (spigotVersion != version) {
-			Bukkit.getLogger().warning("\nThis version of AntiBow is outdated, current version is: " + spigotVersion + "\n" + "You're running version: " + version + "\nPlease update via going to: https://rd.elmhoe.co.uk/AntiBow");
-		}else {
+		if (spigotVersion.contains(version)) {
 			Bukkit.getLogger().info("Your version of AntiBow is up-to-date. Current version: " + spigotVersion);
+		}else {
+			Bukkit.getLogger().warning("\nThis version of AntiBow is outdated, current version is: " + spigotVersion + "\n" + "You're running version: " + version + "\nPlease update via going to: https://rd.elmhoe.co.uk/AntiBow");
 		}
 	}
 }
