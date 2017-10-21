@@ -5,6 +5,7 @@ import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
+import uk.co.ElmHoe.Bukkit.Utilities.HTTPUtility;
 import uk.co.ElmHoe.Bukkit.Utilities.StringUtility;
 
 import net.md_5.bungee.api.ChatColor;
@@ -36,16 +37,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class AntiBow extends JavaPlugin implements Listener {
 	File configFile;
 	FileConfiguration config;
-	private final static String version = "1.1 Beta";
+	private final static String version = "1.2.7";
 	private static ArrayList<ProtectedRegion> regions = new ArrayList<>();
 	private static HashMap<String, Boolean> regionList;
 	private static String blocked_region;
 	private static String region;
 	private static Boolean OPsToBypass;
-	
-	//To be set to false to disable. Debug Logging affects #debuggingLogs();
-	private Boolean debugLogging = true;
-	
+		
 	private void loadYamls() {
 		try {
 			this.config.load(this.configFile);
@@ -86,12 +84,16 @@ public class AntiBow extends JavaPlugin implements Listener {
 
 		try {
 			Bukkit.getPluginManager().registerEvents(this, this);
-			Bukkit.getLogger().info("Events were initated without issue. All looks good.");
+			Bukkit.getLogger().info("Events were initated.");
 		} catch (Exception e) {
 		} // sendLogs("Error #2 on Registering Events." + "<br>" + e.getMessage());}
 
-		Bukkit.getLogger().info("This version of AntiBow was built against & for 1.12.");
-		Bukkit.getLogger().info("");
+		Bukkit.getLogger().info("Checking for an update...");
+		try {
+			updateChecking();
+		} catch (Exception e) {
+			Bukkit.getLogger().warning("Failed to check for an update.");
+		}
 		Bukkit.getLogger().info("Send me improvements, bugs or anything else to https://github.com/ElmHoe/AntiBow");
 		buildRegionsList();
 		Bukkit.getLogger().info("----------- AntiBow Enabled - v " + version + " Build MC-1.12 -----------");
@@ -442,67 +444,24 @@ public class AntiBow extends JavaPlugin implements Listener {
 	}
 
 	/**
-	 * <h3 style="font-style: italic;">debuggingLogs() Documentation</h3>
-	 * This is to be used when debugging problems.
+	 * <h3 style="font-style: italic;">updateChecking() Documentation</h3>
+	 * On Enable - I will check for an update.
 	 * <p>
-	 * It'll spit out and show you any errors when and where they occur for quick resolution.
+	 * If there is an update, this won't yet download but will tell the user that there is an update.
 	 * 
 	 * 
-	 * @param 	log 		The log will be the String that is sent to the console.
-	 * @param	severity	The severity of the log. 
-	 * 						1 is INFO
-	 * 						2 is WARNING
-	 * 						3 is SEVERE 
+
 	 * @author Joshua Fennell.
+	 * @throws Exception 
 	 * 
 	 * 
 	 */
-	public void debuggingLogs(String log, Integer severity) {
-		if (debugLogging == true) {
-			if (severity == 1) {
-				Bukkit.getLogger().info(log.toString());
-			}else if (severity == 2) {
-				Bukkit.getLogger().warning(log.toString());
-			}else if (severity == 3) {
-				for (int i = 0; i < 5; i++) {
-					Bukkit.getLogger().info(" ");
-				}
-				Bukkit.getLogger().severe(log.toString());
-				for (int i = 0; i < 5; i++) {
-					Bukkit.getLogger().info(" ");
-				}
-			}
+	public void updateChecking() throws Exception {
+		String spigotVersion = HTTPUtility.sendGet("https://api.spigotmc.org/legacy/update.php?resource=18925");
+		if (spigotVersion != version) {
+			Bukkit.getLogger().warning("\nThis version of AntiBow is outdated, current version is: " + spigotVersion + "\n" + "You're running version: " + version + "\nPlease update via going to: https://rd.elmhoe.co.uk/AntiBow");
 		}else {
-			//Do nothing.
+			Bukkit.getLogger().info("Your version of AntiBow is up-to-date. Current version: " + spigotVersion);
 		}
 	}
-
-	/**	
-	 * <h3 style="font-style: italic;">sendLogs Documentation </h3>
-	 * 
-	 * Used to sendLogs to a server for me to investigate directly.
-	 * 
-	 * Address would be *.elmhoe.co.uk/logging/send_logs.php
-	 * 
-	 * Logs are always sent via POST to the server.
-	 * 
-	 * @param	error	The string error message to send for investigation.
-	 */
-	public void sendLogs(String error){
-	/* 
-	 * Used for sending errors to myself to investigate.
-	 * 
-	 * 
-	 * if (config.contains("AutomaticallySendLogs")){ if
-	 * (config.getBoolean("AutomaticallySendLogs") == false){ }else{ DateFormat
-	 * dateFormat = new SimpleDateFormat("[dd/MM/yyyy - HH:mm:ss]"); Date date = new
-	 * Date();
-	 * 
-	 * try{ HTTPUtility.sendPost("Time it went wrong: " + dateFormat.format(date) +
-	 * defaultMSG + error + "<br>"+"------------END OF LOG------------");
-	 * }catch(Exception e1){ } } }else{ config.set("AutomaticallySendLogs", true); }
-	 * 
-	 */
-	}
-
 }
