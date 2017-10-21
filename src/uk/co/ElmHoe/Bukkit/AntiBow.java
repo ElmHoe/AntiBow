@@ -17,16 +17,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -43,17 +37,16 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
-@SuppressWarnings("unused")
 public class AntiBow extends JavaPlugin implements Listener {
 	File configFile;
 	FileConfiguration config;
-	private final static String version = "1.2.3 Beta";
+	private final static String version = "1.2.7";
 	private static ArrayList<ProtectedRegion> regions = new ArrayList<>();
 	private static HashMap<String, Boolean> regionList;
 	private static String blocked_region;
 	private static String region;
 	private static Boolean OPsToBypass;
-	
+		
 	private void loadYamls() {
 		try {
 			this.config.load(this.configFile);
@@ -94,12 +87,16 @@ public class AntiBow extends JavaPlugin implements Listener {
 
 		try {
 			Bukkit.getPluginManager().registerEvents(this, this);
-			Bukkit.getLogger().info("Events were initated without issue. All looks good.");
+			Bukkit.getLogger().info("Events were initated.");
 		} catch (Exception e) {
 		} // sendLogs("Error #2 on Registering Events." + "<br>" + e.getMessage());}
 
-		Bukkit.getLogger().info("This version of AntiBow was built against & for 1.12.");
-		Bukkit.getLogger().info("");
+		Bukkit.getLogger().info("Checking for an update...");
+		try {
+			updateChecking();
+		} catch (Exception e) {
+			Bukkit.getLogger().warning("Failed to check for an update.");
+		}
 		Bukkit.getLogger().info("Send me improvements, bugs or anything else to https://github.com/ElmHoe/AntiBow");
 		buildRegionsList();
 		Bukkit.getLogger().info("----------- AntiBow Enabled - v " + version + " Build MC-1.12 -----------");
@@ -412,6 +409,11 @@ public class AntiBow extends JavaPlugin implements Listener {
 		return false;
 	}
 
+	/**
+	 * <h3  style="font-style: italic;">onBowFire() Documentation</h3>
+	 * 
+	 * @param event		When the EntityShootBowEvent is triggered.
+	 */
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onBowFire(EntityShootBowEvent event) {
 
@@ -445,26 +447,40 @@ public class AntiBow extends JavaPlugin implements Listener {
 		}
 	}
 
-	public boolean isPlayerInBlockedRegion(Player p) throws Exception {
+	/** 
+	 * <h3 style="font-style: italic;">isPlayerInBlockedRegion() Documentation. </h3>
+	 * 
+	 * This function will check if a player is in a blocked region or not.
+	 * 
+	 * @param	p		The player to check if they're in a blocked region.
+	 * @return	Boolean	True/False. True if the player IS in a blocked region, false otherwise.
+	 */
+	public boolean isPlayerInBlockedRegion(Player p) {
 		ApplicableRegionSet playerRegions = WGBukkit.getRegionManager(p.getWorld())
 				.getApplicableRegions(p.getLocation());
 		String mapQuery = "Worlds." + p.getWorld().getName() + ".Regions.";
 		for (ProtectedRegion reg : playerRegions.getRegions()) {
 			region = reg.getId();
 			Boolean value = regionList.get(mapQuery + reg.getId());
-			try{
-				if (value) {
-					return true;
-				}
-			}catch(NullPointerException e){
-				HTTPUtility.sendPost("Player: " + p.toString()+ "\n" + " Region: " + region + "\n" + " Map Query: " + mapQuery + "\n" + " Value: " + value.toString() + "\n" +
-						" Exception: " + e.getMessage());
-			}
+			
+			if (value) { return true;	}
 		}
 		return false;
 	}
 
-	public void buildRegionsList() {
+	/**
+	 * <h3 style="font-style: italic;">buildRegionList() Documentation </h3>
+	 * <a style=color:lightgreen;> 
+	 * The tool used to pre-define the configuration file.
+	 * <br>
+	 * Rather than loading the configuration multiple times during use.
+	 * Load the config as a whole when the plugin initiates and only write to it when in use.
+	 * <br>
+	 * This helps take the stress away from the server when in-use.
+	 * </a>
+	 *  
+	 */
+	public void buildRegionsList(){
 		/*
 		 * Used for building the region list.
 		 * 
@@ -490,7 +506,20 @@ public class AntiBow extends JavaPlugin implements Listener {
 							config.getBoolean("Worlds." + worldName + ".Regions." + Regions.get(key).getId()));
 				}
 			}
+		}	
+		if (config.contains("Messages.NotAllowed")) {
+			String oldMsg = config.getString("Messages.NotAllowed");
+			config.set("Messages.NotAllowed", null);
+			config.set("DefaultMessages.NotAllowed", oldMsg);
+			saveConfigOrNah = 1;
 		}
+		if (config.contains("Messages.NoPermission")) {
+			String oldMsg = config.getString("Messages.NoPermission");
+			config.set("Messages.NoPermission", null);
+			config.set("Messages", null);
+			config.set("DefaultMessages.NoPermission", oldMsg);
+			saveConfigOrNah = 1;
+		}		
 		try {
 			if (!(config.contains("OPsToBypass"))) {
 				config.set("OPsToBypass", false);
@@ -520,20 +549,25 @@ public class AntiBow extends JavaPlugin implements Listener {
 		}
 	}
 
-	/*
-	 * public void sendLogs(String error){
+	/**
+	 * <h3 style="font-style: italic;">updateChecking() Documentation</h3>
+	 * On Enable - I will check for an update.
+	 * <p>
+	 * If there is an update, this won't yet download but will tell the user that there is an update.
 	 * 
-	 * Used for sending errors to myself to investigate.
+	 * 
+
+	 * @author Joshua Fennell.
+	 * @throws Exception 
 	 * 
 	 * 
-	 * if (config.contains("AutomaticallySendLogs")){ if
-	 * (config.getBoolean("AutomaticallySendLogs") == false){ }else{ DateFormat
-	 * dateFormat = new SimpleDateFormat("[dd/MM/yyyy - HH:mm:ss]"); Date date = new
-	 * Date();
-	 * 
-	 * try{ HTTPUtility.sendPost("Time it went wrong: " + dateFormat.format(date) +
-	 * defaultMSG + error + "<br>"+"------------END OF LOG------------");
-	 * }catch(Exception e1){ } } }else{ config.set("AutomaticallySendLogs", true); }
-	 * }
 	 */
+	public void updateChecking() throws Exception {
+		String spigotVersion = HTTPUtility.sendGet("https://api.spigotmc.org/legacy/update.php?resource=18925");
+		if (spigotVersion != version) {
+			Bukkit.getLogger().warning("\nThis version of AntiBow is outdated, current version is: " + spigotVersion + "\n" + "You're running version: " + version + "\nPlease update via going to: https://rd.elmhoe.co.uk/AntiBow");
+		}else {
+			Bukkit.getLogger().info("Your version of AntiBow is up-to-date. Current version: " + spigotVersion);
+		}
+	}
 }
