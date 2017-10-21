@@ -1,6 +1,5 @@
 package uk.co.ElmHoe.Bukkit;
 
-import com.sk89q.minecraft.util.commands.Console;
 import com.sk89q.worldguard.bukkit.WGBukkit;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
