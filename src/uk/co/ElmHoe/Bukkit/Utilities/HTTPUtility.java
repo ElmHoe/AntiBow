@@ -50,8 +50,6 @@ public class HTTPUtility {
 		}
 	}
 	
-	
-	
 	public static String sendGet(String url) throws Exception {
 
 
