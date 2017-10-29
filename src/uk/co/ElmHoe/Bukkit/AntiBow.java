@@ -196,48 +196,6 @@ public class AntiBow extends JavaPlugin implements Listener {
 					break;
 					
 				}
-/*				if (args.length == 0){
-					sender.sendMessage(StringUtility.format("&7&m-----[&4Anti&7-&4Bow&7&m]-----"));
-					sender.sendMessage(StringUtility.format("&6Unfortunately, some commands are in-game only. Access from console is limited for now."));
-					sender.sendMessage(StringUtility.format("&6'/antibow msg <message>' &7&owill change the default message when a player attempts to shoot."));
-					sender.sendMessage(StringUtility.format("&6'/antibow msg-reset' &7&owill set the config message back to the default."));
-					sender.sendMessage(StringUtility.format("&6'/antibow reload' &7&owill reload the configuration file."));
-					sender.sendMessage(StringUtility.format("&7&m-----[&4Anti&7-&4Bow&7&m]-----"));
-				}else if (args.length == 1){
-					if (args[0].equalsIgnoreCase("msg-reset")) {
-						config.set("DefaultMessages.NotAllowed",
-								"&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you're not allowed to use the bow in the region: %REGION%");
-						blocked_region = "&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you're not allowed to use the bow in the region: %REGION%";
-						sender.sendMessage(StringUtility.format("&6Default message has been set."));
-						saveRegion();
-					}else if (args[0].equalsIgnoreCase("reload")){
-						
-						 * Reloads the configuration from file.
-						 
-						loadYamls();
-						buildRegionsList();
-						sender.sendMessage(StringUtility.format("&7[&4Anti&7-&4Bow&7] &6&oHey, I've reloaded the configuration for you."));
-					} else {
-						sender.sendMessage(StringUtility.format("Invalid usage, please check usage by using /antibow"));
-					}
-				}else if (args.length >= 2){
-					if (args[0].equalsIgnoreCase("msg")) {
-						String newMsg = "";
-						for (int i = 1; i < args.length; i++) {
-							newMsg = newMsg + args[i] + " ";
-						}
-
-					config.set("DefaultMessages.NotAllowed", newMsg);
-					blocked_region = newMsg;
-					sender.sendMessage(StringUtility.format("&6&oSuccess, message has now been set to: " + newMsg));
-					
-					saveRegion();
-					}else{
-						sender.sendMessage(StringUtility.format("&7&m-----[&4Anti&7-&4Bow&7&m]-----"));
-						sender.sendMessage(StringUtility.format("Invalid usage, please check usage by using /antibow"));
-						sender.sendMessage(StringUtility.format("&7&m-----[&4Anti&7-&4Bow&7&m]-----"));
-					}
-				}*/
 			}else{
 				Player p = (Player) sender;
 				World ofPlayer = p.getWorld();
