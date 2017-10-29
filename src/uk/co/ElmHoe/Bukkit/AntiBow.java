@@ -39,13 +39,15 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class AntiBow extends JavaPlugin implements Listener {
 	File configFile;
 	FileConfiguration config;
-	private final static String version = "1.2.7";
+	private final static String version = "1.2.8";
 	private static ArrayList<ProtectedRegion> regions = new ArrayList<>();
 	private static HashMap<String, Boolean> regionList;
 	private static String blocked_region;
 	private static String region;
 	private static Boolean OPsToBypass;
 		
+	
+	
 	private void loadYamls() {
 		try {
 			this.config.load(this.configFile);
@@ -101,6 +103,7 @@ public class AntiBow extends JavaPlugin implements Listener {
 		Bukkit.getLogger().info("----------- AntiBow Enabled - v " + version + " Build MC-1.12 -----------");
 	}
 
+		
 	public void onDisable() {
 		Bukkit.getLogger().info("AntiBow Disabled");
 	}
@@ -389,8 +392,12 @@ public class AntiBow extends JavaPlugin implements Listener {
 						sender.sendMessage(StringUtility.format("&6&oSuccess, message has now been set to: " + newMsg));
 						
 						saveRegion();
+						}else {
+							sender.sendMessage(StringUtility.format("&7&m-----[&4Anti&7-&4Bow&7&m]-----"));
+							sender.sendMessage(StringUtility.format("Invalid usage, please check usage by using /antibow"));
+							sender.sendMessage(StringUtility.format("&7&m-----[&4Anti&7-&4Bow&7&m]-----"));
 						}
-	
+					}else {
 					}
 				} else {
 					try{
@@ -536,7 +543,7 @@ public class AntiBow extends JavaPlugin implements Listener {
 		}
 		
 		if (!(config.contains("DefaultMessages.NotAllowed"))) {
-			config.set("DefaultDefaultMessages.NotAllowed",
+			config.set("DefaultMessages.NotAllowed",
 					"&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you're not allowed to use the bow in the region: %REGION%");
 			blocked_region = "&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you're not allowed to use the bow in the region: %REGION%";
 			saveConfigOrNah = 1;
