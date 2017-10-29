@@ -5,17 +5,10 @@ import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import uk.co.ElmHoe.Bukkit.Utilities.HTTPUtility;
-import uk.co.ElmHoe.Bukkit.Utilities.StringUtility;
-
+import uk.co.ElmHoe.Bukkit.Utilities.*;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,8 +18,6 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -37,23 +28,15 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class AntiBow extends JavaPlugin implements Listener {
-	File configFile;
-	FileConfiguration config;
-	private final static String version = "1.2.8";
+	private final static String version = "1.2.9";
 	private static ArrayList<ProtectedRegion> regions = new ArrayList<>();
 	private static HashMap<String, Boolean> regionList;
 	private static String blocked_region;
 	private static String region;
 	private static Boolean OPsToBypass;
-		
 	
-	
-	private void loadYamls() {
-		try {
-			this.config.load(this.configFile);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	public AntiBow get() {
+		return this;
 	}
 
 	private WorldGuardPlugin getWorldGuard() {
@@ -70,34 +53,20 @@ public class AntiBow extends JavaPlugin implements Listener {
 	public void onEnable() {
 		getWorldGuard();
 		Bukkit.getLogger().info("----------- Attempting to enable Anti-Bow -----------");
-		this.configFile = new File(getDataFolder(), "config.yml");
+		Bukkit.getPluginManager().registerEvents(this, this);
 		try {
-			firstRun();
-			Bukkit.getLogger().info("First Run was initated without issue.");
-		} catch (Exception e) {
-
-		}
-
-		this.config = new YamlConfiguration();
-
-		try {
-			loadYamls();
-			Bukkit.getLogger().info("Attempting to load YAML files.");
-		} catch (Exception e) {
-		} // sendLogs("Error #1 whilst loading YAML Files" + "<br>" + e.getMessage());}
-
-		try {
-			Bukkit.getPluginManager().registerEvents(this, this);
-			Bukkit.getLogger().info("Events were initated.");
-		} catch (Exception e) {
-		} // sendLogs("Error #2 on Registering Events." + "<br>" + e.getMessage());}
-
-		Bukkit.getLogger().info("Checking for an update...");
-		try {
+			Bukkit.getLogger().info("Checking for an update...");
 			updateChecking();
 		} catch (Exception e) {
 			Bukkit.getLogger().warning("Failed to check for an update.");
 		}
+		try {
+			ConfigUtility.get();
+			ConfigUtility.firstRun(get());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 		Bukkit.getLogger().info("Send me improvements, bugs or anything else to https://github.com/ElmHoe/AntiBow");
 		buildRegionsList();
 		Bukkit.getLogger().info("----------- AntiBow Enabled - v " + version + " Build MC-1.12 -----------");
@@ -109,33 +78,7 @@ public class AntiBow extends JavaPlugin implements Listener {
 	}
 
 	public void saveRegion() {
-		try {
-			config.save(configFile);
-			Bukkit.getLogger().info("Configuration has been saved.");
-		} catch (IOException e) {
-		} // sendLogs("Error #3 on SaveRegion()" + "<br>" + e.getMessage());}
-	}
-
-	private void firstRun() throws Exception {
-		if (!this.configFile.exists()) {
-			this.configFile.getParentFile().mkdirs();
-			copy(getResource("config.yml"), this.configFile);
-		}
-	}
-
-	private void copy(InputStream in, File file) {
-		try {
-			OutputStream out = new FileOutputStream(file);
-			byte[] buf = new byte[63];
-			int len;
-			while ((len = in.read(buf)) > 0) {
-				out.write(buf, 0, len);
-			}
-			out.close();
-			in.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		Bukkit.getLogger().info(ConfigUtility.saveConfiguration());
 	}
 
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
@@ -158,8 +101,8 @@ public class AntiBow extends JavaPlugin implements Listener {
 					
 					
 					if (args[0].equalsIgnoreCase("msg-reset")) {
-						config.set("DefaultMessages.NotAllowed",
-								"&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you're not allowed to use the bow in the region: %REGION%");
+						ConfigUtility.populateConfig("DefaultMessages.NotAllowed", 
+								"&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you're not allowed to use the bow in the region: %REGION%", "string");
 						blocked_region = "&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you're not allowed to use the bow in the region: %REGION%";
 						sender.sendMessage(StringUtility.format("&6Default message has been set."));
 						saveRegion();
@@ -167,9 +110,9 @@ public class AntiBow extends JavaPlugin implements Listener {
 						/*
 						 * Reloads the configuration from file.
 						 */
-						loadYamls();
+						ConfigUtility.loadYamls();
 						buildRegionsList();
-						sender.sendMessage(StringUtility.format("&7[&4Anti&7-&4Bow&7] &6&oHey, I've reloaded the configuration for you."));
+						sender.sendMessage(StringUtility.format("&7[&4Anti&7-&4Bow&7] &6&oI've reloaded the configuration for you."));
 					} else {
 						sender.sendMessage(StringUtility.format("Invalid usage, please check usage by using /antibow"));
 					}
@@ -183,7 +126,7 @@ public class AntiBow extends JavaPlugin implements Listener {
 							newMsg = newMsg + args[i] + " ";
 						}
 
-					config.set("DefaultMessages.NotAllowed", newMsg);
+					ConfigUtility.populateConfig("DefaultMessages.NotAllowed", newMsg, "String");
 					blocked_region = newMsg;
 					sender.sendMessage(StringUtility.format("&6&oSuccess, message has now been set to: " + newMsg));
 					
@@ -227,10 +170,10 @@ public class AntiBow extends JavaPlugin implements Listener {
 							} else if (regions.size() == 1) {
 								for (ProtectedRegion r : WGBukkit.getRegionManager(ofPlayer)
 										.getApplicableRegions(p.getLocation())) {
-									if (config.getBoolean("Worlds." + worldName + ".Regions." + r.getId()) == true) {
+									if (ConfigUtility.configReadBoolean("Worlds." + worldName + ".Regions." + r.getId()) == true) {
 										sender.sendMessage("The region: " + r.getId() + " is already blocking bows.");
 									} else {
-										config.set("Worlds." + worldName + ".Regions." + r.getId(), true);
+										ConfigUtility.populateConfig("Worlds." + worldName + ".Regions." + r.getId(), "true", "boolean");
 										sender.sendMessage(StringUtility
 												.format("&6&oThe region: " + r.getId() + " is now blocking bows."));
 										regionList.put("Worlds." + worldName + ".Regions." + r.getId(), true);
@@ -243,7 +186,7 @@ public class AntiBow extends JavaPlugin implements Listener {
 										"&6&oYou're currently in multiple regions, please click on which region you'd like to add."));
 								for (ProtectedRegion r : WGBukkit.getRegionManager(ofPlayer)
 										.getApplicableRegions(p.getLocation())) {
-									if (config.getBoolean("Worlds." + worldName + ".Regions." + r.getId()) == false) {
+									if (ConfigUtility.configReadBoolean("Worlds." + worldName + ".Regions." + r.getId()) == false) {
 										TextComponent message = new TextComponent("Region: " + r.getId());
 										message.setColor(ChatColor.YELLOW);
 										message.setClickEvent(
@@ -253,8 +196,9 @@ public class AntiBow extends JavaPlugin implements Listener {
 								}
 							}
 						} else if (args[0].equalsIgnoreCase("msg-reset")) {
-							config.set("DefaultMessages.NotAllowed",
-									"&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you're not allowed to use the bow in the region: %REGION%");
+							
+							ConfigUtility.populateConfig("DefaultMessages.NotAllowed",
+									"&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you're not allowed to use the bow in the region: %REGION%", "string");
 							blocked_region = "&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you're not allowed to use the bow in the region: %REGION%";
 							sender.sendMessage(StringUtility.format("&6Default message has been set."));
 							saveRegion();
@@ -270,8 +214,8 @@ public class AntiBow extends JavaPlugin implements Listener {
 							} else if (regions.size() == 1) {
 								for (ProtectedRegion r : WGBukkit.getRegionManager(ofPlayer)
 										.getApplicableRegions(p.getLocation())) {
-									if (config.contains("Worlds." + worldName + ".Regions." + r.getId())) {
-										config.set("Worlds." + worldName + ".Regions." + r.getId(), false);
+									if (ConfigUtility.configContainsBoolean("Worlds." + worldName + ".Regions." + r.getId())) {
+										ConfigUtility.populateConfig("Worlds." + worldName + ".Regions." + r.getId(), "false", "Boolean");
 										sender.sendMessage(StringUtility
 												.format("&6&oThe region: " + r.getId() + " has been removed."));
 										regionList.remove("Worlds." + worldName + ".Regions." + r.getId(), true);
@@ -287,7 +231,7 @@ public class AntiBow extends JavaPlugin implements Listener {
 										"&6&oYou're currently in multiple regions, please click on which region you'd like to remove."));
 								for (ProtectedRegion r : WGBukkit.getRegionManager(ofPlayer)
 										.getApplicableRegions(p.getLocation())) {
-									if (config.getBoolean("Worlds." + worldName + ".Regions." + r.getId()) == true) {
+									if (ConfigUtility.configReadBoolean("Worlds." + worldName + ".Regions." + r.getId()) == true) {
 										TextComponent message = new TextComponent("Region: " + r.getId());
 										message.setColor(ChatColor.YELLOW);
 										message.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
@@ -301,7 +245,7 @@ public class AntiBow extends JavaPlugin implements Listener {
 							/*
 							 * Reloads the configuration from file.
 							 */
-							loadYamls();
+							ConfigUtility.loadYamls();
 							buildRegionsList();
 							sender.sendMessage(StringUtility.format("&7[&4Anti&7-&4Bow&7] &6&oHey, I've reloaded the configuration for you."));
 						} else {
@@ -311,7 +255,7 @@ public class AntiBow extends JavaPlugin implements Listener {
 						if (args[0].equalsIgnoreCase("remove")) {
 							try {
 								ProtectedRegion region = WGBukkit.getPlugin().getRegionManager(ofPlayer).getRegion(args[1]);
-								config.set("Worlds." + worldName + ".Regions." + region.getId(), false);
+								ConfigUtility.populateConfig("Worlds." + worldName + ".Regions." + region.getId(), "false", "Boolean");
 								sender.sendMessage(StringUtility
 										.format("&6&oRegion " + region.getId() + " is no longer being blocked"));
 								regionList.remove("Worlds." + worldName + ".Regions." + region.getId(), true);
@@ -326,7 +270,7 @@ public class AntiBow extends JavaPlugin implements Listener {
 						} else if (args[0].equalsIgnoreCase("add")) {
 							try {
 								ProtectedRegion region = WGBukkit.getPlugin().getRegionManager(ofPlayer).getRegion(args[1]);
-								config.set("Worlds." + worldName + ".Regions." + region.getId(), true);
+								ConfigUtility.populateConfig("Worlds." + worldName + ".Regions." + region.getId(), "true", "boolean");
 								sender.sendMessage(
 										StringUtility.format("&6&oRegion " + region.getId() + " is now being blocked"));
 								regionList.put("Worlds." + worldName + ".Regions." + region.getId(), true);
@@ -345,11 +289,11 @@ public class AntiBow extends JavaPlugin implements Listener {
 								newMsg = newMsg + args[i] + " ";
 							}
 	
-						config.set("DefaultMessages.NotAllowed", newMsg);
-						blocked_region = newMsg;
-						sender.sendMessage(StringUtility.format("&6&oSuccess, message has now been set to: " + newMsg));
+							ConfigUtility.populateConfig("DefaultMessages.NotAllowed", newMsg, "String");
+							blocked_region = newMsg;
+							sender.sendMessage(StringUtility.format("&6&oSuccess, message has now been set to: " + newMsg));
 						
-						saveRegion();
+							saveRegion();
 						}else {
 							sender.sendMessage(StringUtility.format("&7&m-----[&4Anti&7-&4Bow&7&m]-----"));
 							sender.sendMessage(StringUtility.format("Invalid usage, please check usage by using /antibow"));
@@ -359,9 +303,9 @@ public class AntiBow extends JavaPlugin implements Listener {
 					}
 				} else {
 					try{
-						sender.sendMessage(StringUtility.format(config.getString("DefaultMessages.NoPermission")));
+						sender.sendMessage(StringUtility.format(ConfigUtility.configReadString("DefaultMessages.NoPermission")));
 					}catch(Exception e) {
-						config.set("DefaultMessages.NoPermission", "&7[&4Anti&7-&4Bow&7] &6&oNo Permission. OP/Antibow.add required.");
+						ConfigUtility.populateConfig("DefaultMessages.NoPermission", "&7[&4Anti&7-&4Bow&7] &6&oNo Permission. OP/Antibow.add required.", "String");
 						sender.sendMessage(StringUtility.format("&7[&4Anti&7-&4Bow&7] &6&oNo Permission. OP/Antibow.add required."));
 						saveRegion();
 					}
@@ -458,55 +402,43 @@ public class AntiBow extends JavaPlugin implements Listener {
 			String worldName = worlds.get(i).getName();
 
 			for (String key : Regions.keySet()) {
-				if (!(config.contains("Worlds." + worldName + ".Regions." + Regions.get(key).getId()))) {
-					config.set("Worlds." + worldName + ".Regions." + Regions.get(key).getId(), false);
+				if (!(ConfigUtility.configContainsBoolean("Worlds." + worldName + ".Regions." + Regions.get(key).getId()))) {
+					ConfigUtility.populateConfig("Worlds." + worldName + ".Regions." + Regions.get(key).getId(), "false", "boolean");
 					Bukkit.getLogger().warning("Wrote: '" + "Worlds." + worldName + ".Regions."
 							+ Regions.get(key).getId() + "' to config.");
 					saveConfigOrNah = 1;
 					regionList.put("Worlds." + worldName + ".Regions." + Regions.get(key).getId(),
-							config.getBoolean("Worlds." + worldName + ".Regions." + Regions.get(key).getId()));
+							ConfigUtility.configReadBoolean("Worlds." + worldName + ".Regions." + Regions.get(key).getId()));
 				} else {
 					regionList.put("Worlds." + worldName + ".Regions." + Regions.get(key).getId(),
-							config.getBoolean("Worlds." + worldName + ".Regions." + Regions.get(key).getId()));
+							ConfigUtility.configReadBoolean("Worlds." + worldName + ".Regions." + Regions.get(key).getId()));
 				}
 			}
 		}	
-		if (config.contains("Messages.NotAllowed")) {
-			String oldMsg = config.getString("Messages.NotAllowed");
-			config.set("Messages.NotAllowed", null);
-			config.set("DefaultMessages.NotAllowed", oldMsg);
-			saveConfigOrNah = 1;
-		}
-		if (config.contains("Messages.NoPermission")) {
-			String oldMsg = config.getString("Messages.NoPermission");
-			config.set("Messages.NoPermission", null);
-			config.set("Messages", null);
-			config.set("DefaultMessages.NoPermission", oldMsg);
-			saveConfigOrNah = 1;
-		}		
 		try {
-			if (!(config.contains("OPsToBypass"))) {
-				config.set("OPsToBypass", false);
+			if (!(ConfigUtility.configContainsBoolean("OPsToBypass"))) {
+				ConfigUtility.populateConfig("OPsToBypass", "false", "Boolean");
+				//populateConfig("OPsToBypass", false);
 				Bukkit.getLogger().warning("Invalid or no option received for OPsToBypass. Wrote as false to config.");
 				OPsToBypass = false;
 				saveConfigOrNah = 1;
 			}else {
-				OPsToBypass = config.getBoolean("OPsToBypass");
+				OPsToBypass = ConfigUtility.configReadBoolean("OPsToBypass");
 			}
 		}catch (Exception e) {
 			saveConfigOrNah = 1;
-			config.set("OPsToBypass", false);
+			ConfigUtility.populateConfig("OPsToBypass", "false", "Boolean");
 			OPsToBypass = false;
 			Bukkit.getLogger().warning("Invalid or no option received for OPsToBypass. Wrote as false to config.");
 		}
 		
-		if (!(config.contains("DefaultMessages.NotAllowed"))) {
-			config.set("DefaultMessages.NotAllowed",
-					"&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you're not allowed to use the bow in the region: %REGION%");
+		if (!(ConfigUtility.configContainsBoolean("DefaultMessages.NotAllowed"))) {
+			ConfigUtility.populateConfig("DefaultMesages.NotAllowed", 
+					"&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you're not allowed to use the bow in the region: %REGION%\"", "string");
 			blocked_region = "&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you're not allowed to use the bow in the region: %REGION%";
 			saveConfigOrNah = 1;
 		}else {
-			blocked_region = config.getString("DefaultMessages.NotAllowed");
+			blocked_region = ConfigUtility.configReadString("DefaultMessages.NotAllowed");
 		}
 		if (saveConfigOrNah == 1) {
 			saveRegion();
