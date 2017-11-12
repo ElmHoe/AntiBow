@@ -57,15 +57,11 @@ public class AntiBow extends JavaPlugin implements Listener {
 		try {
 			Bukkit.getLogger().info("Checking for an update...");
 			updateChecking();
-		} catch (Exception e) {
-			Bukkit.getLogger().warning("Failed to check for an update.");
-		}
+		} catch (Exception e) {Bukkit.getLogger().warning("Failed to check for an update.");}
 		try {
 			ConfigUtility.get();
 			ConfigUtility.firstRun(get());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		} catch (Exception e) {e.printStackTrace();}
 
 		Bukkit.getLogger().info("Send me improvements, bugs or anything else to https://github.com/ElmHoe/AntiBow");
 		buildRegionsList();
@@ -433,8 +429,8 @@ public class AntiBow extends JavaPlugin implements Listener {
 		}
 		
 		if (!(ConfigUtility.configContainsBoolean("DefaultMessages.NotAllowed"))) {
-			ConfigUtility.populateConfig("DefaultMesages.NotAllowed", 
-					"&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you're not allowed to use the bow in the region: %REGION%\"", "string");
+			ConfigUtility.populateConfig("DefaultMessages.NotAllowed", 
+					"&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you're not allowed to use the bow in the region: %REGION%", "string");
 			blocked_region = "&7[&4Anti&7-&4Bow&7] &6&oSorry %PLAYER%&6&o, but you're not allowed to use the bow in the region: %REGION%";
 			saveConfigOrNah = 1;
 		}else {
