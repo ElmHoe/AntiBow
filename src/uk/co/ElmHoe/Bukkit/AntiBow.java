@@ -28,7 +28,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class AntiBow extends JavaPlugin implements Listener {
-	private final static String version = "1.2.9";
+	private final static String version = "1.3.0";
 	private static ArrayList<ProtectedRegion> regions = new ArrayList<>();
 	private static HashMap<String, Boolean> regionList;
 	private static String blocked_region;
@@ -277,8 +277,19 @@ public class AntiBow extends JavaPlugin implements Listener {
 								sender.sendMessage(StringUtility.format(
 										"&6&oThe region you specified wasn't found, please ensure you're in the same world as the region."));
 							}
+						}else if (args[0].equalsIgnoreCase("msg")) {
+							String newMsg = "";
+							for (int i = 1; i < args.length; i++) {
+								newMsg = newMsg + args[i] + " ";
+							}
+	
+							ConfigUtility.populateConfig("DefaultMessages.NotAllowed", newMsg, "String");
+							blocked_region = newMsg;
+							sender.sendMessage(StringUtility.format("&6&oSuccess, message has now been set to: " + newMsg));
+						
+							saveRegion();
 						}
-					}if (args.length >= 2) {
+					}else if (args.length >= 3) {
 						if (args[0].equalsIgnoreCase("msg")) {
 							String newMsg = "";
 							for (int i = 1; i < args.length; i++) {
